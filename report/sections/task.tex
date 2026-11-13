@@ -1,0 +1,62 @@
+\section{Task Definition and Evaluation Protocol}
+\label{sec:task}
+
+\subsection{Unit of prediction and metric}
+The unit of prediction is a (figure, sentence) pair. For each figure $F$ a system outputs a set of sentences
+$S_F$, which is compared with the gold set $G_F$:
+\[
+P_F=\frac{|S_F\cap G_F|}{|S_F|},\qquad R_F=\frac{|S_F\cap G_F|}{|G_F|},\qquad
+F1_F=\frac{2P_FR_F}{P_F+R_F}.
+\]
+Precision, recall and F1 are then averaged over figures, so that every figure counts equally. This is the
+protocol of \citet{ramesh2015figsum}, which makes our numbers directly comparable with theirs. The selected set
+includes the explicit sentences. ``F1'' without qualification always means this per-figure mean.
+
+\subsection{Vocabulary}
+\begin{table}[h]
+\centering
+\small
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash\bfseries}p{3.6cm}L}
+\toprule
+\textnormal{\textbf{Term}} & \textbf{Meaning}\\
+\midrule
+Explicit (citing) sentence & A sentence whose text names figure $F$, as detected by our grammar or by the
+citation tags of the source XML.\\
+Near implicit sentence & A sentence that does not name $F$ and lies within three sentences of a sentence that
+does.\\
+Far implicit sentence & A sentence that does not name $F$ and lies more than three sentences from every
+citation of $F$ (or $F$ is never cited).\\
+Out-of-fold (OOF) score & A score given to a paper by a model that was not trained on that paper. The training
+papers are split into five folds of three papers; a model trained on four folds scores the fifth, and rotating
+gives every paper an out-of-fold score.\\
+AUC & The probability that a randomly chosen gold pair receives a higher score than a randomly chosen non-gold
+pair: 0.5 for random scores, 1.0 for a perfect ranking. It measures ranking quality independently of any
+cut-off. Example: gold scores $\{0.9, 0.4\}$ and non-gold scores $\{0.5, 0.2, 0.1\}$ give five wins in six
+comparisons, so AUC $=5/6$. \emph{Near} and \emph{far} AUC restrict the comparison to near and far pairs.\\
+\bottomrule
+\end{tabularx}
+\caption{Terms used throughout the report.}
+\label{tab:vocab}
+\end{table}
+
+When we break results down by category, the explicit, near and far columns are computed from pooled sentence
+counts (correct / selected / gold over all figures), while the overall P, R and F1 are per-figure means.
+
+\subsection{Protocol and safeguards}
+\label{sec:protocol}
+The benchmark is small, so we took particular care that reported numbers are not flattered by tuning.
+\begin{itemize}
+  \item \textbf{A fixed split.} Fifteen papers form the training pool and three papers form a test set
+        (Section~\ref{sec:split}). The split was fixed before the cross-encoder and
+        span-tagger runs of Section~\ref{sec:models} were trained. Earlier exploratory phases used a 13-paper
+        protocol; results from those phases are marked as such.
+  \item \textbf{Everything out-of-fold.} All model selection uses out-of-fold scores on the training pool.
+        Each configuration is trained with three random seeds per fold and the three scores of a pair are
+        averaged. Even the decision threshold is chosen out-of-fold: the threshold applied to a fold is the one
+        that maximises F1 on the other four folds.
+  \item \textbf{A sealed, pre-registered test.} Before any test score was computed we wrote down the primary
+        model, its decision rule, the source of its threshold and the criterion for success
+        (file \texttt{TEST\_PLAN.md} in the repository). The test set was then scored once.
+  \item \textbf{Uncertainty.} Differences from the rule are given with a 95\% interval obtained by resampling
+        the figures 5{,}000 times \citep{efron1993bootstrap}.
+\end{itemize}

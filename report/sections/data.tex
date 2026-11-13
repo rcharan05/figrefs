@@ -1,0 +1,91 @@
+\section{Data}
+\label{sec:data}
+
+\subsection{The \figsum{} gold standard}
+\figsum{} \citep{ramesh2015figsum} provides two gold standards. \textbf{GS1} lists, for each figure, every
+sentence of the article that annotators judged to be associated with it; this is our task. \textbf{GS2}
+contains sentences selected for a short figure \emph{summary}; we use it only to check our reproduction of the
+published baselines and never for tuning.
+
+\paragraph{How GS1 was built.} According to the paper, four biologists annotated two articles each (eight
+articles), and two of them, B1 and B2, both annotated eleven further articles, marking 303 and 383 sentences
+respectively. The released gold is a single combined list of 678 sentences for 94 figures in 19 articles.
+
+\paragraph{Agreement.} On the doubly annotated articles the two annotators agree at Cohen's $\kappa=0.68$
+\citep{cohen1960kappa}. Kappa corrects raw agreement for the agreement expected by chance:
+\[
+\kappa=\frac{P_{\text{agree}}-P_{\text{chance}}}{1-P_{\text{chance}}},
+\]
+where $P_{\text{agree}}$ is the fraction of (figure, sentence) decisions on which both annotators gave the same
+yes/no answer, and $P_{\text{chance}}$ is the agreement expected if each answered at random with their own
+rate of ``yes''. The correction matters because most sentences are not associated with a given figure. As an
+illustration (the numbers are ours, not from the paper): if each annotator says ``yes'' for 10\% of sentences,
+then $P_{\text{chance}}=0.1\cdot0.1+0.9\cdot0.9=0.82$, and a raw agreement of 94\% gives
+$\kappa=(0.94-0.82)/0.18=0.67$. A value of 0.68 is conventionally called substantial agreement
+\citep{landis1977}, but it also means that the gold standard is far from unambiguous, and that no system
+should be expected to approach an F1 of 1.
+
+\paragraph{Full text.} The gold standard lists sentences but not the articles themselves. We obtained the full
+text of the 18 articles that have gold labels, mostly from the PubMed Central open-access collection, parsed
+them, and matched the gold sentences to the parsed text. This gives \textbf{18 articles, 91 figures and 657
+gold sentences}.
+
+\subsection{The fixed split}
+\label{sec:split}
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lrrrrrrr}
+\toprule
+Split & Papers & Figures & Sentences & Gold & Explicit & Near & Far\\
+\midrule
+Train (5 folds of 3 papers) & 15 & 73 & 2{,}232 & 549 & 206 & 231 & 112\\
+Test (sealed)               &  3 & 18 &   463 & 108 &  32 &  46 &  30\\
+\bottomrule
+\end{tabular}
+\caption{The split used for all learned models. ``Sentences'' counts body sentences only (abstract to
+conclusion), without captions, tables or references; these are short biomedical journal articles of roughly
+2{,}500 to 5{,}000 words.}
+\label{tab:split}
+\end{table}
+
+The three test papers were chosen from the five articles added last, which no earlier experiment had
+touched. They turn out to be harder than the training papers: 28\% of their gold is far from any citation,
+against 20\% in training. The training folds were balanced greedily by number of figures.
+
+\subsection{Where the implicit references are}
+Figure~\ref{fig:dist} shows how far the implicit gold sentences of the training papers lie from the nearest
+citation of their figure. Of 343 implicit sentences, 176 (51\%) are exactly one sentence away, 55 are two or
+three sentences away, and 112 (33\%) are further. More than half of the far sentences (60 of 112) are in the
+Discussion. This distribution explains much of what follows: a rule that looks one sentence either side of a
+citation is hard to beat, and the far references are both the hardest and the least represented.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  ybar, bar width=16pt, bar shift=0pt, width=0.82\linewidth, height=5.2cm,
+  ymin=0, ymax=200, xmin=0.4, xmax=5.6, ylabel={Implicit gold sentences},
+  xlabel={Distance to the nearest citation of the figure (sentences)},
+  xtick={1,2,3,4,5}, xticklabels={1,2,3,4--10,{more than 10}},
+  nodes near coords, nodes near coords style={font=\small},
+  axis lines*=left, ymajorgrids, grid style={soft},
+  tick label style={font=\small}, label style={font=\small}]
+\addplot[fill=steel,draw=steel] coordinates {(1,176) (2,43) (3,12)};
+\addplot[fill=accent,draw=accent] coordinates {(4,20) (5,92)};
+\end{axis}
+\end{tikzpicture}
+\caption{Distance from each implicit gold sentence to the nearest explicit citation of its figure
+(15 training papers, 343 implicit sentences). Blue: \emph{near} (231). Orange: \emph{far} (112).}
+\label{fig:dist}
+\end{figure}
+
+\subsection{Other data}
+\begin{itemize}
+  \item \textbf{arXiv-28:} 28 arXiv papers with \LaTeX{} source. The \verb|\ref| commands give the true
+        explicit references for free. Used to develop and measure the explicit grammar.
+  \item \textbf{bioRxiv-177:} 177 bioRxiv papers with both XML and PDF. Used as a held-out benchmark for
+        explicit references.
+  \item \textbf{PMC-6049:} 6{,}049 open-access PubMed Central papers, used to mine free training labels
+        (Section~\ref{sec:fakelabels}).
+\end{itemize}

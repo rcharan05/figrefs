@@ -1,0 +1,323 @@
+\section{Learned Models}
+\label{sec:models}
+
+\subsection{Why transformers, and which}
+The rule has two structural limits that no amount of tuning removes. It never looks further than one sentence
+from a citation, so it finds 156 of the 231 near gold sentences, and it finds \textbf{none of the 112 far
+ones}. Going further requires judging meaning: does this sentence in the Discussion restate the result that
+the caption of Figure~2 describes? That is a job for a pre-trained transformer \emph{encoder}, a model that
+reads text and produces a score, as opposed to a generative model that writes text.
+
+There is a second reason to move beyond the rule. \bof{} and its filters are heuristics derived from
+biomedical articles: the position of implicit sentences, the wording of supplementary-material mentions, the
+names of Methods sections. Other fields write about their figures differently, and such rules need not
+transfer. A model that judges whether a sentence and a caption are about the same thing, from their meaning,
+is a more trustworthy basis for papers from other domains.
+
+We use two encoders, in two different roles.
+\begin{itemize}
+  \item \textbf{DeBERTa-v3} \citep{he2023debertav3} as a \emph{cross-encoder}: one model reads the caption and
+        a candidate sentence together and outputs one score. DeBERTa keeps separate representations for what a
+        token is and where it is, and is among the strongest open encoders for judging a pair of texts. Its
+        512-token limit is sufficient for a caption and a sentence. We use the base model (184M parameters)
+        and then the large one (435M).
+  \item \textbf{ModernBERT-large} \citep{warner2024modernbert} (395M parameters) as a \emph{span tagger}: one
+        model reads a long stretch of the paper and outputs a score for every sentence in it. Its
+        8{,}192-token context makes this possible on a single 15\,GB GPU.
+\end{itemize}
+The two see the problem differently. The cross-encoder judges one sentence against the caption and is told the
+sentence's position as text; the span tagger sees the neighbouring sentences and the flow of the paragraph
+directly. As Section~\ref{sec:ensemble} shows, their errors differ enough that averaging them helps. We did not
+use generative language models: small ones were weak in our tests (Section~\ref{sec:othertrials}) and large
+ones conflict with the requirement to run locally. All training ran on NVIDIA T4 GPUs on Kaggle.
+
+\subsection{The data problem}
+All learning has to come from \textbf{549 gold sentences in 15 papers}, of which only \textbf{112 are far}.
+The training pool contains 11{,}998 (figure, sentence) pairs, so 4.6\% are positive. We searched for further
+labelled data and found none: the large figure datasets label explicit mentions only
+(Section~\ref{sec:related}). A model with 400 million parameters will memorise 15 papers. We therefore tried
+three ways of creating more training signal: free labels from other papers, a two-stage curriculum, and
+augmentation of the real data.
+
+\subsection{Manufactured labels: two ideas that did not transfer}
+\label{sec:fakelabels}
+
+\paragraph{Free labels from citations (``M2'').} An implicit reference is, loosely, an explicit reference
+without the citation. So we manufactured them: in 6{,}049 open-access papers we took every sentence that cites
+a figure in parentheses, deleted the citation, and used the result as a positive example for that figure's
+caption. Negatives were sentences that cite a different figure, or that occur before the figure is first
+cited. This gave about 113{,}000 pairs, on which we trained a DeBERTa-v3-base cross-encoder. On held-out
+papers of the same kind the model was good (AUC 0.873). On \figsum{} it was not: for near sentences its AUC
+was 0.614, \emph{below} plain TF-IDF similarity to the caption (0.639). Fine-tuning it further on \figsum{}
+pairs only rediscovered the \pmk{1} rule, and starting from the M2 weights was worse than starting from the
+plain pre-trained model.
+
+\paragraph{A two-stage curriculum.} The second idea was to separate two skills. Stage~1 learns to match
+captions and sentences from \emph{all} gold sentences, with every figure number masked (``Fig.~[X]'') so that
+the model must use content. Stage~2 starts from stage~1 and learns implicit references given the explicit
+ones. Stage~1 did not learn anything that transfers. In the first attempt (all negatives, a positive weight of
+about 20) the loss stayed flat and the near AUC on held-out papers was 0.521. In the second attempt (four
+negatives per positive, resampled each epoch, a lower learning rate) the training loss did fall, but the
+held-out near AUC was still 0.52, ranging from 0.38 to 0.61 across folds: the model memorised its training
+papers. Stage-2 models scored F1 0.666 to 0.682, well below the simple cross-encoder (0.728). We closed the
+idea after two attempts.
+
+\paragraph{Why both failed.} A sentence written to carry ``(Fig.~$N$)'' is a statement of a result. The
+implicit sentences that humans mark are often of a different kind: the sentence that sets up the experiment
+(``To test whether \ldots''), or a sentence in the Discussion that interprets the result. Manufactured
+positives teach the model to recognise result statements, which is not the distinction the task needs. The
+``figure-talk'' classifier of Appendix~\ref{app:other} failed for the same reason. One part of the
+two-stage intuition did survive: training on the explicit sentences as well, with figure numbers
+\emph{visible}, clearly helps, as the next subsection shows.
+
+\subsection{What worked: every real pair, lightly augmented}
+\label{sec:dataset}
+The simplest recipe was the best. We train on every (figure, sentence) pair of the training papers, including
+the explicit sentences, and add three light techniques.
+\begin{itemize}
+  \item \textbf{Citation-deleted copies (``A3'').} For a sentence that cites $F$, we also train on a copy from
+        which the citation has been deleted and which is presented as not citing $F$; its label is unchanged.
+        This stops the model from relying on the citation marker alone. In the stage-2 model, removing A3 cost
+        0.038 F1 (0.670 to 0.632).
+  \item \textbf{Paraphrases by back-translation} \citep{sennrich2016backtranslation}. Sentences are translated
+        to German and back with MarianMT \citep{junczys2018marian}, with figure mentions protected, giving
+        paraphrases of 1{,}773 of the 2{,}232 training sentences. During training a sentence is swapped for
+        its paraphrase with probability 0.3. Together with A3 this raised the far AUC of the base cross-encoder
+        from 0.674 to 0.722 at unchanged F1.
+  \item \textbf{Sampling of far negatives.} For a given figure almost every far sentence is a negative. Each
+        epoch uses all gold pairs, all explicit and near pairs, and a freshly drawn 20\% of the far non-gold
+        pairs. This brings the ratio of negatives to positives from about 20:1 to about 5:1 and makes an epoch
+        three to four times shorter. We did not run a control without sampling, so we claim no accuracy gain
+        for it.
+\end{itemize}
+The final dataset file holds 18 papers, 2{,}695 sentences with their paragraph, section and citations,
+14{,}792 (figure, sentence) pairs (11{,}998 for training), 657 gold labels, the paraphrases, 125
+citation-deleted copies, a masked copy of every sentence, and the fold of every paper.
+
+\subsection{C0: the pairwise cross-encoder}
+\label{sec:c0}
+\paragraph{Input.} For a figure $F$ and a candidate sentence, the model receives two texts. Text~A is the
+caption, with a leading ``Fig.~$N$.'' removed and truncated to 700 characters. Text~B is the candidate,
+preceded by a tag written in plain words and by the nearest sentence that cites $F$:
+
+\begin{Verbatim}[fontsize=\footnotesize,frame=single,framesep=6pt,rulecolor=\color{navy!30}]
+A: Production of interleukin (IL)-17 by peripheral blood mononuclear cells ...
+B: [cites this figure: no | 1 sentence before a citation of this figure |
+    same paragraph | section: Results | cites: none]
+   Citing: We detected an increase in IL-17 level after stimulation ... (Fig. 2a).
+   Candidate: To evaluate the effects of inflammatory cytokines released by ...
+\end{Verbatim}
+
+The tag has five fields: whether the candidate itself cites $F$; its distance and direction to the nearest
+citation of $F$ (or ``this is a citation'', or ``no citation of this figure in the paper''); whether it shares
+a paragraph with that citation; its top-level section; and what else it cites (other figures, a table,
+supplementary material, or nothing). The tag gives the model everything the rule knows, as text that it can
+learn to weigh, in place of a hard distance limit. The citing sentence is included because implicit sentences
+often continue what the explicit one says.
+
+\paragraph{Model.} The pair is tokenised to at most 320 tokens and passed through DeBERTa-v3. The final hidden
+state of the first token goes through the model's pooling layer and a linear layer to a single logit; its
+sigmoid is the probability that the sentence is associated with $F$. Every sentence of the paper is scored
+for every figure.
+
+\paragraph{Training.} Binary cross-entropy, with positives weighted by the ratio of negatives to positives
+(about 5); AdamW \citep{loshchilov2019adamw} with learning rate $2\times10^{-5}$ and weight decay 0.01; 10\%
+linear warm-up followed by linear decay; batch size 16; three epochs; mixed precision. In a representative
+fold the training loss per epoch was 0.97, 0.63, 0.57. Full hyperparameters are in
+Appendix~\ref{app:hyper}.
+
+\paragraph{Result.} C0 with the base model scores F1 0.728 out-of-fold, below \bof{} (0.752), although its
+ranking is good (near AUC 0.822). An earlier version of the same model on the 13-paper protocol had shown
+the same pattern (F1 0.721 against 0.767 for \bof{}, near AUC 0.847). The diagnosis that guided the following
+steps was therefore: \emph{the model ranks sentences well; the gain is lost when scores are turned into a set}.
+
+\subsection{Bigger model and the first fix to the decision step}
+\textbf{C0L} is the same model with DeBERTa-v3-large (learning rate $10^{-5}$; micro-batches of 4 accumulated
+to 16 and gradient checkpointing, since a batch of 8 did not fit in memory). Its near AUC rose to 0.848, the
+best so far, yet its F1 was 0.725.
+
+The cause was the decision step. We had been selecting a sentence when the \emph{z-score of its logit within
+its paper} exceeded a threshold, on the reasoning that papers differ in scale. But standardising within a
+paper discards how confident the model is in absolute terms, and the large model is confident. Thresholding
+the raw logit instead gave F1 \textbf{0.752}, level with the rule ($-0.000$, interval $[-0.019, +0.020]$).
+From this point on, the decision step received as much attention as the model.
+
+Two further variants of the large cross-encoder did not help: adding the augmentations (C0aL, 0.723) and
+appending the sentences immediately before and after the candidate to the input (C0Lctx, 0.735, with a lower
+far AUC). The second result suggested that context should not be bolted on to a pairwise model but read
+natively.
+
+\subsection{SPAN: the whole-paper span tagger}
+\label{sec:span}
+\paragraph{Input.} For a figure $F$, the input begins with the caption and continues with the sentences of the
+paper in order. Each sentence is preceded by a marker token (we reuse the tokenizer's \texttt{[MASK]} token
+purely as a placeholder), and by short inline annotations of structure:
+
+\begin{Verbatim}[fontsize=\footnotesize,frame=single,framesep=6pt,rulecolor=\color{navy!30},commandchars=\\\{\}]
+[CLS] Figure 2. Production of interleukin (IL)-17 by ... [SEP]
+[MASK] \S{} Results \P{} To evaluate the effects of inflammatory cytokines ...
+[MASK] [cites this figure] We detected an increase in IL-17 level ...
+[MASK] [cites Figure 3] ...
+   ...
+[MASK] \S{} Discussion \P{} ...
+\end{Verbatim}
+
+``\S{} \emph{section}'' appears when the top-level section changes, ``\P'' at the start of each paragraph,
+``[cites this figure]'' on sentences that name $F$, and ``[cites Figure $g$]'' on sentences that name other
+figures. The caption header is limited to 200 tokens, each sentence to 96 tokens, and a window to 2{,}048
+tokens.
+
+\paragraph{Windows.} A paper is longer than one window, so windows tile the paper: a window is filled greedily
+with whole sentences, and the next window starts two-thirds of the way through the previous one, so that
+consecutive windows overlap by a third. A sentence near the edge of one window is thus seen again with context
+on both sides. A sentence that falls in two windows receives the mean of its two logits.
+
+\paragraph{Model.} ModernBERT-large encodes the window once. A linear layer ($1024\rightarrow1$) applied to the
+hidden state at each marker gives one logit per sentence. A single forward pass therefore scores every sentence
+in the window, where the cross-encoder needs one pass per sentence, and each score is computed with the
+neighbouring sentences, paragraph boundaries and other figures' citations in view. This lets the model learn
+what the CRF of Appendix~\ref{app:other} was meant to capture, namely that annotators mark runs.
+
+\paragraph{Training.} For each figure we keep every window that contains a citation or a gold sentence of that
+figure, and 30\% of the remaining windows. Citation-deleted copies and paraphrases are each applied with
+probability 0.3. The loss is binary cross-entropy over all markers, with positives weighted by the
+negative-to-positive ratio capped at 8; learning rate $2\times10^{-5}$; effective batch of 8 windows; five
+epochs; mixed precision and gradient checkpointing.
+
+\paragraph{Result.} SPAN has the best ranking of any single model (near AUC 0.872, far AUC 0.701) and an F1 of
+0.747 with a raw threshold.
+
+\subsection{Anchoring: a decision rule calibrated per figure}
+\label{sec:anchor}
+A single threshold has to serve every figure, but the models score some figures systematically higher than
+others, for instance figures with long and specific captions. A figure's own citing sentences offer a natural
+reference point: they are known to be about the figure. We define the \textbf{anchored score} of a sentence as
+\[
+a(F,s)=\text{logit}(F,s)-\operatorname{mean}_{e\in E(F)}\text{logit}(F,e),
+\]
+where $E(F)$ is the set of sentences that cite $F$ (if a figure is never cited, we subtract the median logit
+of its sentences). The prediction is $E(F)\cup\{s: a(F,s)\ge t\}$ with one threshold $t$ for all figures. In
+words: select a sentence if the model scores it nearly as high as it scores the figure's own citations.
+
+For example, suppose that for some figure the citing sentences score about $-2$ and a true implicit sentence
+scores $-4$. A raw threshold of 0 rejects it; the anchored score is $-2$ and it is selected. Table~\ref{tab:decision}
+compares the three decision rules on the same C0L scores.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lc}
+\toprule
+Decision rule (C0L, explicit sentences always included) & OOF F1\\
+\midrule
+z-score of the logit within the paper $\ge t$ & 0.725\\
+Raw logit $\ge t$ & 0.752\\
+Anchored score $\ge t$ & \best{0.756}\\
+\bottomrule
+\end{tabular}
+\caption{The same model scores under three decision rules. Thresholds are chosen out-of-fold.}
+\label{tab:decision}
+\end{table}
+
+\subsection{Ensemble}
+\label{sec:ensemble}
+The ensemble score of a pair is the mean of the C0L logit and the SPAN logit; it is then anchored as above.
+The ensemble ranks better than either model (near AUC 0.892 against 0.848 and 0.872; far AUC 0.783) and
+scores \textbf{F1 0.766} out-of-fold, $+0.014$ over \bof{} with an interval of $[-0.009, +0.039]$. This
+configuration, with the threshold $t=-3.6$ that maximises F1 on the out-of-fold scores of the training papers,
+was registered as the primary model for the sealed test.
+
+\subsection{Early stopping}
+After the test (Section~\ref{sec:test}) we returned to the span tagger with validation-based early stopping.
+Training runs for up to eight epochs. Every half epoch the model is scored on validation papers; the metric is
+average precision, smoothed over the last two checks; training never stops before epoch 3 and stops after two
+epochs without a new best, restoring the best weights. The median best epoch was 4.25, and 5 of the 16 jobs ran
+the full eight epochs. The resulting model, \textbf{SPAN\_ES}, improves the single span tagger from 0.744 to
+0.763 (anchored). Because the validation papers are the three former test papers, models from this point on
+have no clean test number.
+
+\subsection{Text from the figure image}
+\label{sec:vis}
+All the models above know a figure only through its caption. We tested whether text taken from the image
+itself helps. Figures were cropped from the PDFs by locating each caption and taking the image or vector
+region above it; this succeeded for 57 of the 91 figures. For each crop we produced (i) the text visible in
+the figure, from the PDF text layer for vector figures and otherwise by prompting a small vision--language
+model, Qwen2-VL-2B \citep{wang2024qwen2vl}, to list the labels it can read, and (ii) a literal description
+from the same model (chart type, axes, legend, extremes). Both were appended to the caption header of the
+span tagger (\textbf{SPAN\_VIS}); figures without a crop received a note saying that no image was available.
+
+The result was negative: SPAN\_VIS scores 0.742 against 0.763 for the otherwise identical SPAN\_ES. We see
+three likely reasons. Biomedical captions are long and already describe what the figure shows. The small
+general-purpose vision model was often wrong; it described a table as a bar chart, for example. And a third of
+the figures had no crop at all.
+
+This agrees in part with the figure-captioning literature. \citet{yang2023scicapplus} report that generic
+image features add nothing once the mentioning text is available, and \citet{huang2023summaries} that most of
+the information needed for a caption is in the surrounding text. It does \emph{not} agree with them in one
+respect: in SciCap+, OCR text did improve captioning. That work concerns computer-science figures, which carry
+more text (axis labels, legends) and have shorter captions, and a generation task; so our negative result
+should be read as specific to biomedical papers and a small vision model, and OCR remains worth testing on
+other kinds of papers. A three-model ensemble that includes SPAN\_VIS does reach the best out-of-fold F1 we
+observed (0.776), which suggests that the visual variant makes somewhat different errors even though it is not
+better on its own.
+
+\subsection{Summary of the progression}
+Table~\ref{tab:progress} and Figure~\ref{fig:progress} list the steps in the order we took them.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabularx}{\linewidth}{rLrrr}
+\toprule
+\# & Step & OOF F1 & Near AUC & Far AUC\\
+\midrule
+0 & Rule \bof{} & 0.752 & -- & --\\
+1 & C0: DeBERTa-v3-base cross-encoder, every pair (z-score rule) & 0.728 & 0.822 & 0.674\\
+2 & Two-stage curriculum (stage 2 from stage 1) & 0.670 & 0.772 & 0.763\\
+3 & C0a: C0 + citation-deleted copies + paraphrases & 0.728 & 0.833 & 0.722\\
+4 & C0L: DeBERTa-v3-large & 0.725 & 0.848 & 0.653\\
+5 & C0L with a raw-logit decision rule & 0.752 & 0.848 & 0.653\\
+6 & C0Lctx: C0L + neighbouring sentences in the input & 0.735 & 0.832 & 0.621\\
+7 & SPAN: ModernBERT-large span tagger & 0.747 & 0.872 & 0.701\\
+8 & Anchored decision rule (C0L alone) & 0.756 & 0.848 & 0.653\\
+\rowcolor{hl}
+9 & Ensemble C0L + SPAN, anchored \emph{(pre-registered)} & \best{0.766} & 0.892 & 0.783\\
+10 & SPAN\_ES: span tagger with early stopping & 0.763 & 0.882 & 0.785\\
+11 & SPAN\_VIS: SPAN\_ES + figure OCR and description & 0.742 & 0.882 & 0.764\\
+12 & Ensemble C0L + SPAN\_ES + SPAN\_VIS & \best{0.776} & 0.899 & 0.778\\
+\bottomrule
+\end{tabularx}
+\caption{Out-of-fold results on the 15 training papers, in chronological order. Explicit sentences are always
+included in the selection. Steps 10--12 used the former test papers for early stopping.}
+\label{tab:progress}
+\end{table}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.95\linewidth, height=5.6cm, ymin=0.65, ymax=0.80,
+  xmin=0.5, xmax=12.5, xtick={1,...,12}, xlabel={Step (numbering of Table~\ref{tab:progress})},
+  ylabel={Out-of-fold F1}, ymajorgrids, grid style={soft}, axis lines*=left,
+  tick label style={font=\small}, label style={font=\small},
+  legend style={font=\small, at={(0.98,0.04)}, anchor=south east, draw=none, fill=none}]
+\addplot[accent, thick, dashed, domain=0.5:12.5, samples=2] {0.752};
+\addlegendentry{Rule \bof{} (0.752)}
+\addplot[steel, thick, mark=*, mark size=2pt] coordinates
+ {(1,0.728) (2,0.670) (3,0.728) (4,0.725) (5,0.752) (6,0.735) (7,0.747) (8,0.756) (9,0.766) (10,0.763) (11,0.742) (12,0.776)};
+\addlegendentry{Learned models}
+\end{axis}
+\end{tikzpicture}
+\caption{Out-of-fold F1 at each step. The learned models pass the rule only after the decision step is fixed
+(steps 5 and 8) and the two models are combined (step 9).}
+\label{fig:progress}
+\end{figure}
+
+\subsection{Controlling overfitting}
+With 15 training papers, overfitting is the default outcome; stage~1 of the curriculum showed it plainly
+(training loss falling, held-out AUC at chance). Our controls were: reporting only out-of-fold numbers, so
+that memorisation cannot inflate a result; few epochs with a small learning rate, weight decay and a decaying
+schedule; augmentation and fresh sampling of negatives in every epoch; averaging three seeds; and, in the last
+run, early stopping on validation papers. The three epochs of the cross-encoder follow common practice for
+fine-tuning encoders of this family \citep{devlin2019bert} and were not tuned; the early-stopping run later
+confirmed that the five epochs chosen for the span tagger were close to the median optimum of 4.25.

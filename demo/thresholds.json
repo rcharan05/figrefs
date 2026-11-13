@@ -1,0 +1,54 @@
+{
+ "C0L": {
+  "parts": [
+   "C0L"
+  ],
+  "decision": "raw",
+  "t": 2.3,
+  "label": "C0L \u00b7 DeBERTa-large pairwise"
+ },
+ "SPAN": {
+  "parts": [
+   "SPAN"
+  ],
+  "decision": "raw",
+  "t": 1.0,
+  "label": "SPAN \u00b7 ModernBERT span tagger"
+ },
+ "SPAN_ES": {
+  "parts": [
+   "SPAN_ES"
+  ],
+  "decision": "raw",
+  "t": 1.7,
+  "label": "SPAN_ES \u00b7 span tagger + early stopping"
+ },
+ "ENS": {
+  "parts": [
+   "C0L",
+   "SPAN"
+  ],
+  "decision": "anchored",
+  "t": -3.6,
+  "label": "Ensemble C0L+SPAN (test winner)"
+ },
+ "ENS_ES": {
+  "parts": [
+   "C0L",
+   "SPAN_ES"
+  ],
+  "decision": "anchored",
+  "t": -3.9,
+  "label": "Ensemble C0L+SPAN_ES"
+ },
+ "ENS3": {
+  "parts": [
+   "C0L",
+   "SPAN_ES",
+   "SPAN_VIS"
+  ],
+  "decision": "anchored",
+  "t": -4.4,
+  "label": "Ensemble C0L+SPAN_ES+SPAN_VIS (best out-of-fold)"
+ }
+}

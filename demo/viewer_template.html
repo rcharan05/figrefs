@@ -1,0 +1,323 @@
+<title>Figure Reference Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:wght@500;600&display=swap">
+<style>
+/* Layout: sticky control bar; figure rail on the left; reading pane with the paper's sentences marked per method. */
+:root{
+  --bg:#F5F5F1; --surface:#FFFFFF; --ink:#15233B; --muted:#5B6574; --line:#DCDBD3; --soft:#ECEBE5;
+  --a:#2B5DAA; --a-soft:#E1E9F6; --b:#B4581A; --b-soft:#F7E4D3; --both:#4B3F8F; --both-soft:#E7E3F5;
+  --gold:#2F7D4F; --gold-soft:#DCEFE3; --warn:#8A5A00; --warn-soft:#F6EBCF;
+  --display:'Source Serif 4', Georgia, serif; --body:'IBM Plex Sans', Arial, sans-serif; --mono:'IBM Plex Mono', Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#11161F; --surface:#18202C; --ink:#E7EAF0; --muted:#9AA4B3; --line:#2C3644; --soft:#202938;
+  --a:#7FA6E6; --a-soft:#1E2E4A; --b:#E39A62; --b-soft:#3A2617; --both:#B3A6EE; --both-soft:#2C2748;
+  --gold:#6CC593; --gold-soft:#173226; --warn:#E6C06B; --warn-soft:#3A2E12; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11161F; --surface:#18202C; --ink:#E7EAF0; --muted:#9AA4B3; --line:#2C3644; --soft:#202938;
+  --a:#7FA6E6; --a-soft:#1E2E4A; --b:#E39A62; --b-soft:#3A2617; --both:#B3A6EE; --both-soft:#2C2748;
+  --gold:#6CC593; --gold-soft:#173226; --warn:#E6C06B; --warn-soft:#3A2E12; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.bar-in{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;padding-block:12px;max-width:1400px;margin:0 auto}
+h1{font-family:var(--display);font-weight:600;font-size:22px;margin:0;letter-spacing:.2px}
+.sub{color:var(--muted);font-size:13px}
+label.lab{font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);font-weight:600}
+select,button{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 10px}
+button{cursor:pointer}
+button:hover,select:hover{border-color:var(--muted)}
+:focus-visible{outline:2px solid var(--a);outline-offset:2px}
+.grow{flex:1}
+main{max-width:1400px;margin:0 auto;padding-block:20px;display:grid;grid-template-columns:260px minmax(0,1fr);gap:20px}
+@media (max-width:860px){main{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px}
+.rail{padding:12px;display:flex;flex-direction:column;gap:6px;align-self:start;position:sticky;top:calc(env(safe-area-inset-top,0px) + 76px)}
+@media (max-width:860px){.rail{position:static;flex-direction:row;flex-wrap:wrap}}
+.fig{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;text-align:left;border:1px solid transparent;background:transparent;padding:8px 10px;border-radius:8px}
+@media (max-width:860px){.fig{width:auto}}
+.fig[aria-pressed="true"]{background:var(--soft);border-color:var(--line);font-weight:600}
+.fig small{color:var(--muted);font-family:var(--mono);font-size:12px}
+.content{display:flex;flex-direction:column;gap:16px;min-width:0}
+.card{padding:16px 18px}
+.meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;letter-spacing:.3px;padding:3px 9px;border-radius:999px;background:var(--soft);color:var(--muted)}
+.pill.test{background:var(--b-soft);color:var(--b)} .pill.train{background:var(--a-soft);color:var(--a)}
+.pill.val{background:var(--warn-soft);color:var(--warn)} .pill.new{background:var(--gold-soft);color:var(--gold)}
+.cap{font-family:var(--display);font-size:17px;line-height:1.45;margin:8px 0 0;max-width:90ch}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:8px;font-size:13px;border-radius:999px;padding:5px 12px}
+.chip[aria-pressed="true"]{border-color:var(--ink);background:var(--soft);font-weight:600}
+.tag{font-family:var(--mono);font-size:11px;font-weight:500;padding:1px 6px;border-radius:4px;background:var(--soft);color:var(--ink);border:1px solid var(--line)}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)}
+td.num{text-align:right;font-family:var(--mono)}
+.ovr{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media (max-width:600px){.ovr{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{padding:10px 12px;border-radius:8px;background:var(--soft)}
+.stat b{display:block;font-family:var(--mono);font-size:22px}
+.stat span{font-size:12px;color:var(--muted)}
+.stat.both{background:var(--both-soft)} .stat.both b{color:var(--both)}
+.stat.onlya{background:var(--a-soft)} .stat.onlya b{color:var(--a)}
+.stat.onlyb{background:var(--b-soft)} .stat.onlyb b{color:var(--b)}
+.sents{display:flex;flex-direction:column}
+.sec{font-size:12px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);font-weight:600;padding:14px 0 4px}
+.gap{color:var(--muted);font-size:12px;padding:4px 0 4px 0;font-family:var(--mono)}
+.row{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;padding:7px 8px;border-radius:6px;align-items:start}
+.row.pstart{margin-top:6px;border-top:1px dashed var(--line)}
+.row.both{background:var(--both-soft)} .row.onlya{background:var(--a-soft)} .row.onlyb{background:var(--b-soft)}
+.marks{display:flex;gap:4px;padding-top:2px;min-width:40px;flex-wrap:wrap;max-width:200px}
+.mk{font-family:var(--mono);font-size:10.5px;font-weight:500;padding:1px 5px;border-radius:4px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.mk.gold{background:var(--gold-soft);color:var(--gold);border-color:var(--gold)}
+.mk.off{opacity:.25}
+.txt{min-width:0}
+.idx{font-family:var(--mono);font-size:11px;color:var(--muted);margin-right:6px}
+.cite{background:var(--a-soft);color:var(--a);border-radius:3px;padding:0 3px;font-weight:600}
+.legend{font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.note{font-size:13px;color:var(--muted);max-width:95ch}
+.err{color:var(--b);font-size:13px}
+.hidden-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+@media (prefers-reduced-motion:no-preference){.row{transition:background .15s}}
+</style>
+
+<header class="bar"><div class="bar-in wrap">
+  <div><h1>Figure Reference Explorer</h1><div class="sub">Which sentences each method links to each figure</div></div>
+  <div class="grow"></div>
+  <div style="display:flex;flex-direction:column;gap:2px"><label class="lab" for="paperSel">Paper</label><select id="paperSel"></select></div>
+  <div style="display:flex;flex-direction:column;gap:2px"><span class="lab">Add a paper</span>
+    <label class="tag" for="fileIn" style="cursor:pointer;padding:7px 10px;font-size:12px;border-radius:6px">Load results file…</label>
+    <input id="fileIn" class="hidden-input" type="file" accept=".json,application/json" multiple></div>
+</div></header>
+
+<main class="wrap">
+  <nav class="panel rail" id="figRail" aria-label="Figures"></nav>
+  <section class="content">
+    <div class="panel card">
+      <div class="meta" id="paperMeta"></div>
+      <p class="cap" id="caption"></p>
+    </div>
+    <div class="panel card" style="display:flex;flex-direction:column;gap:12px">
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" id="tabCompare" aria-selected="true">Compare methods</button>
+        <button class="tab" role="tab" id="tabOverlap" aria-selected="false">Overlap of two methods</button>
+      </div>
+      <div id="compareCtl" style="display:flex;flex-direction:column;gap:8px">
+        <span class="lab">Methods shown</span>
+        <div class="chips" id="methodChips"></div>
+      </div>
+      <div id="overlapCtl" hidden style="display:flex;flex-wrap:wrap;gap:12px;align-items:end">
+        <div style="display:flex;flex-direction:column;gap:2px"><label class="lab" for="selA">Method A</label><select id="selA"></select></div>
+        <div style="display:flex;flex-direction:column;gap:2px"><label class="lab" for="selB">Method B</label><select id="selB"></select></div>
+        <label style="display:flex;gap:6px;align-items:center;font-size:13px"><input type="checkbox" id="showGold" checked> show gold marks</label>
+      </div>
+      <div id="overlapStats" hidden></div>
+      <div class="tablewrap"><table id="metrics"></table></div>
+      <p class="note" id="provNote"></p>
+    </div>
+    <div class="panel card">
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;align-items:center">
+        <div class="legend" id="legend"></div>
+        <label style="display:flex;gap:6px;align-items:center;font-size:13px"><input type="checkbox" id="fullText"> show the whole paper</label>
+      </div>
+      <div class="sents" id="sents"></div>
+    </div>
+    <p class="note">Data: FigSum+ GS1 (Ramesh, Sethi &amp; Yu, 2015), 18 biomedical articles. P/R/F1 per figure against the human labels.
+      “+E” methods always include the sentences that cite the figure. Papers you add with “Load results file” come from the any-paper notebook and have no gold labels.</p>
+    <p class="err" id="err" hidden></p>
+  </section>
+</main>
+
+<script id="data" type="application/json">__DATA__</script>
+<script>
+(function(){
+  const D = JSON.parse(document.getElementById('data').textContent);
+  const SHORT = {GOLD:'Gold',PARA:'Para',B0F:'B0f',C0L:'C0L',SPAN:'SPAN',SPAN_ES:'SPAN_ES',ENS:'ENS',ENS_ES:'ENS_ES',ENS3:'ENS3',CLAUDE:'Claude',GEMINI:'Gemini'};
+  const PROV = {'out-of-fold':['train','out-of-fold: the model never trained on this paper'],
+                'held-out test':['test','sealed test paper, scored once by the final models'],
+                'AI labels':['new','labels written by an AI annotator'],
+                'new paper (final model)':['new','final model (trained on the 15 papers) run on this new paper'],
+                'validation':['val','validation paper: used for early stopping, not a clean test'],
+                'new paper':['new','new paper processed by the any-paper notebook (no gold labels)']};
+  const state = {p:0, f:null, shown:new Set(['GOLD','PARA','B0F','ENS']), mode:'compare', A:'B0F', B:'ENS', full:false, gold:true};
+  try { const s = JSON.parse(localStorage.getItem('fre-state')||'{}'); if (s.shown) state.shown = new Set(s.shown); if (s.A) state.A=s.A; if (s.B) state.B=s.B; } catch(e) {}
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const methods = () => D.order.filter(k => D.papers.some(p => p.methods[k]));
+  const save = () => { try { localStorage.setItem('fre-state', JSON.stringify({shown:[...state.shown], A:state.A, B:state.B})); } catch(e) {} };
+
+  function paperLabel(p){ const tag = p.split==='test'?'test':p.split==='train'?'train':'new'; return `${p.title?esc(p.title).slice(0,50)+' · ':''}${p.id} (${tag})`; }
+  function fillPapers(){
+    const sel = $('paperSel'); sel.innerHTML = '';
+    const groups = [['new','Added papers'],['test','Test papers (3)'],['train','Training papers (15)']];
+    for (const [g,lab] of groups){
+      const og = document.createElement('optgroup'); og.label = lab; let any=false;
+      D.papers.forEach((p,i)=>{ if ((p.split||'new')===g || (g==='new' && !['test','train'].includes(p.split))){ const o=document.createElement('option'); o.value=i; o.innerHTML=paperLabel(p); og.appendChild(o); any=true; }});
+      if (any) sel.appendChild(og);
+    }
+    sel.value = state.p;
+  }
+  function sel(p,k,f){ const m = p.methods[k]; return new Set((m && m[String(f)]) || []); }
+  function prf(s,g){ if (!g.size) return null; let tp=0; s.forEach(i=>{ if (g.has(i)) tp++; }); const P = s.size? tp/s.size : 0, R = tp/g.size; return [P,R,(P+R)?2*P*R/(P+R):0]; }
+  function paperF1(p,k){ let t=0,n=0; for (const f of p.figs){ const r = prf(sel(p,k,f), sel(p,'GOLD',f)); if (r){ t+=r[2]; n++; } } return n? t/n : null; }
+  const fmt = x => x===null||x===undefined ? '–' : x.toFixed(3);
+
+  function renderRail(){
+    const p = D.papers[state.p], rail = $('figRail'); rail.innerHTML = '';
+    p.figs.forEach(f => {
+      const b = document.createElement('button'); b.className='fig'; b.setAttribute('aria-pressed', String(f===state.f));
+      const g = sel(p,'GOLD',f).size;
+      b.innerHTML = `<span>Figure ${f}</span><small>${p.has_gold? g+' gold' : sel(p,'ENS',f).size+' picked'}</small>`;
+      b.onclick = () => { state.f = f; render(); };
+      rail.appendChild(b);
+    });
+  }
+  function renderChips(){
+    const box = $('methodChips'); box.innerHTML='';
+    for (const k of methods()){
+      if (k==='GOLD' && !D.papers[state.p].has_gold) continue;
+      const b = document.createElement('button'); b.className='chip'; b.setAttribute('aria-pressed', String(state.shown.has(k)));
+      b.innerHTML = `<span class="tag">${SHORT[k]||k}</span>${esc(D.labels[k]||k)}`;
+      b.onclick = () => { state.shown.has(k)? state.shown.delete(k) : state.shown.add(k); save(); render(); };
+      box.appendChild(b);
+    }
+    for (const id of ['selA','selB']){
+      const s = $(id); s.innerHTML='';
+      for (const k of methods()){ if (k==='GOLD' && !D.papers[state.p].has_gold) continue; const o=document.createElement('option'); o.value=k; o.textContent=(SHORT[k]||k)+' · '+(D.labels[k]||k); s.appendChild(o); }
+    }
+    $('selA').value = state.A; $('selB').value = state.B;
+  }
+  function highlightCites(t, f){
+    return esc(t).replace(/\b(Figs?\.?|Figures?|FIGS?\.?)\s*([0-9][0-9A-Za-z,–\-\s]*?)(?=[\s).;,]|$)/g, (m, kw, nums) => {
+      const ns = (nums.match(/\d+/g)||[]).map(Number);
+      return ns.includes(f) ? `<span class="cite">${m}</span>` : m;
+    });
+  }
+  function render(){
+    const p = D.papers[state.p];
+    if (state.f===null || !p.figs.includes(state.f)) state.f = p.figs[0];
+    const f = state.f;
+    renderRail(); renderChips();
+    $('tabCompare').setAttribute('aria-selected', String(state.mode==='compare'));
+    $('tabOverlap').setAttribute('aria-selected', String(state.mode==='overlap'));
+    $('compareCtl').hidden = state.mode!=='compare'; $('overlapCtl').hidden = state.mode!=='overlap'; $('overlapStats').hidden = state.mode!=='overlap';
+    const splitPill = p.split==='test' ? '<span class="pill test">sealed test paper</span>' : p.split==='train' ? '<span class="pill train">training paper</span>' : '<span class="pill new">added paper</span>';
+    $('paperMeta').innerHTML = `${splitPill}<span class="pill">PMID/ID ${esc(p.id)}</span><span class="pill">${p.sentences.length} sentences</span><span class="pill">${p.figs.length} figures</span>${p.source?`<span class="pill">${esc(p.source)}</span>`:''}`;
+    $('caption').innerHTML = `<b>Figure ${f}.</b> ${esc(p.captions[String(f)]||'(no caption found)')}`;
+    const g = sel(p,'GOLD',f);
+    // metrics
+    const ks = state.mode==='overlap' ? [state.A, state.B] : methods().filter(k => state.shown.has(k) && k!=='GOLD' && p.methods[k]);
+    let h = `<tr><th>Method</th><th>Source of these picks</th><th style="text-align:right">Picked</th>${p.has_gold?'<th style="text-align:right">P</th><th style="text-align:right">R</th><th style="text-align:right">F1 (figure)</th><th style="text-align:right">F1 (paper)</th>':''}</tr>`;
+    for (const k of ks){
+      if (k==='GOLD') continue;
+      const s = sel(p,k,f), r = prf(s,g);
+      const pv = (p.provenance && p.provenance[k]) || (['PARA','B0F'].includes(k) ? 'rule (no training)' : (p.has_gold?'':'new paper'));
+      const cls = (PROV[pv]||['',''])[0];
+      h += `<tr><td><span class="tag">${SHORT[k]||k}</span> ${esc(D.labels[k]||k)}</td><td>${cls?`<span class="pill ${cls}">${esc(pv)}</span>`:esc(pv)}</td><td class="num">${s.size}</td>${p.has_gold?`<td class="num">${fmt(r&&r[0])}</td><td class="num">${fmt(r&&r[1])}</td><td class="num">${fmt(r&&r[2])}</td><td class="num">${fmt(paperF1(p,k))}</td>`:''}</tr>`;
+    }
+    if (p.has_gold) h += `<tr><td><span class="tag">Gold</span> ${p.human_gold?'Human labels':esc(D.labels.GOLD||'AI labels')}</td><td>${p.human_gold?'FigSum+ annotators':'AI annotators'}</td><td class="num">${g.size}</td><td></td><td></td><td></td><td></td></tr>`;
+    $('metrics').innerHTML = h;
+    const used = new Set(ks.map(k => (p.provenance||{})[k]).filter(Boolean));
+    $('provNote').textContent = [...used].map(u => (PROV[u]||['',''])[1]).filter(Boolean).join(' · ');
+    // overlap
+    let A, B;
+    if (state.mode==='overlap'){
+      A = sel(p,state.A,f); B = sel(p,state.B,f);
+      const both=[...A].filter(i=>B.has(i)), oa=[...A].filter(i=>!B.has(i)), ob=[...B].filter(i=>!A.has(i));
+      const uni = new Set([...A,...B]).size;
+      let tb=0,ta=0,tbb=0,tu=0;
+      for (const ff of p.figs){ const a=sel(p,state.A,ff), b=sel(p,state.B,ff); const bo=[...a].filter(i=>b.has(i)).length; tb+=bo; ta+=a.size-bo; tbb+=b.size-bo; tu+=new Set([...a,...b]).size; }
+      $('overlapStats').innerHTML = `<div class="ovr">
+        <div class="stat both"><b>${both.length}</b><span>picked by both</span></div>
+        <div class="stat onlya"><b>${oa.length}</b><span>only ${esc(SHORT[state.A]||state.A)}</span></div>
+        <div class="stat onlyb"><b>${ob.length}</b><span>only ${esc(SHORT[state.B]||state.B)}</span></div>
+        <div class="stat"><b>${uni? (both.length/uni).toFixed(2):'–'}</b><span>Jaccard (both ÷ either)</span></div></div>
+        <p class="note" style="margin:8px 0 0">Whole paper: ${tb} both · ${ta} only ${esc(SHORT[state.A]||state.A)} · ${tbb} only ${esc(SHORT[state.B]||state.B)} · Jaccard ${tu?(tb/tu).toFixed(2):'–'}</p>`;
+      $('legend').innerHTML = `<span class="pill" style="background:var(--both-soft);color:var(--both)">both</span><span class="pill" style="background:var(--a-soft);color:var(--a)">only ${esc(SHORT[state.A]||state.A)}</span><span class="pill" style="background:var(--b-soft);color:var(--b)">only ${esc(SHORT[state.B]||state.B)}</span>${p.has_gold&&state.gold?'<span class="mk gold">Gold</span> = human label':''}<span class="cite">Fig. N</span> = cites this figure`;
+    } else {
+      $('legend').innerHTML = `Each tag marks a method that picked the sentence${p.has_gold?'; <span class="mk gold">Gold</span> = human label':''}. <span class="cite">Fig. N</span> = cites this figure.`;
+    }
+    // sentences
+    const shownK = state.mode==='overlap' ? [] : methods().filter(k => state.shown.has(k) && p.methods[k]);
+    const sets = {}; for (const k of shownK) sets[k] = sel(p,k,f);
+    const relevant = new Set(); for (const k of (state.mode==='overlap'?[state.A,state.B,'GOLD']:shownK)) sel(p,k,f).forEach(i=>relevant.add(i));
+    p.cue.forEach((c,i)=>{ if (c.includes(f)) relevant.add(i); });
+    const keep = i => state.full || [...relevant].some(j => Math.abs(j-i)<=1);
+    let out='', lastSec=null, lastShown=-2;
+    for (let i=0;i<p.sentences.length;i++){
+      if (!keep(i)) continue;
+      const para = p.sent_para[i], sec = (p.para_section||[])[para] || '';
+      if (i>lastShown+1 && lastShown>=0) out += `<div class="gap">… ${i-lastShown-1} sentence${i-lastShown-1>1?'s':''} not shown</div>`;
+      if (sec && sec!==lastSec){ out += `<div class="sec">${esc(sec)}</div>`; lastSec = sec; }
+      const pstart = i>0 && p.sent_para[i-1]!==para;
+      let cls = '', marks = '';
+      if (state.mode==='overlap'){
+        const a=A.has(i), b=B.has(i); cls = a&&b?'both':a?'onlya':b?'onlyb':'';
+        if (p.has_gold && state.gold && g.has(i)) marks = '<span class="mk gold">Gold</span>';
+      } else {
+        for (const k of shownK){ const on = sets[k].has(i); if (k==='GOLD') { if (on) marks += '<span class="mk gold">Gold</span>'; } else marks += `<span class="mk${on?'':' off'}" title="${esc(D.labels[k]||k)}">${SHORT[k]||k}</span>`; }
+      }
+      out += `<div class="row ${cls} ${pstart?'pstart':''}"><div class="marks">${marks}</div><div class="txt"><span class="idx">${i}</span>${highlightCites(p.sentences[i], f)}</div></div>`;
+      lastShown = i;
+    }
+    if (lastShown < p.sentences.length-1 && lastShown>=0) out += `<div class="gap">… ${p.sentences.length-1-lastShown} sentences not shown</div>`;
+    $('sents').innerHTML = out || '<p class="note">No sentences picked for this figure.</p>';
+  }
+  $('paperSel').onchange = e => { state.p = +e.target.value; state.f = null; render(); };
+  $('tabCompare').onclick = () => { state.mode='compare'; render(); };
+  $('tabOverlap').onclick = () => { state.mode='overlap'; render(); };
+  $('selA').onchange = e => { state.A = e.target.value; save(); render(); };
+  $('selB').onchange = e => { state.B = e.target.value; save(); render(); };
+  $('showGold').onchange = e => { state.gold = e.target.checked; render(); };
+  $('fullText').onchange = e => { state.full = e.target.checked; render(); };
+  $('fileIn').onchange = async e => {
+    const err = $('err'); err.hidden = true; let added = 0, first = null;
+    for (const file of e.target.files){
+      try {
+        const j = JSON.parse(await file.text());
+        if (j.figures && !j.sentences){                      // one AI labeler's answer: {paper, labeler, figures}
+          const pid = String(j.paper || file.name.replace(/_[^_]+\.json$/,''));
+          const lab = String(j.labeler || (file.name.match(/_([^_.]+)\.json$/)||[])[1] || 'AI').toUpperCase().replace(/[^A-Z0-9_]/g,'');
+          const p = D.papers.find(q => q.id === pid);
+          if (!p) throw new Error(`paper ${pid} is not loaded yet (load its results file first)`);
+          p.methods[lab] = {}; for (const f of p.figs) p.methods[lab][String(f)] = (j.figures[String(f)]||[]).map(Number);
+          if (!D.order.includes(lab)) D.order.push(lab);
+          D.labels[lab] = D.labels[lab] || (lab.charAt(0)+lab.slice(1).toLowerCase()+' (AI labeler)');
+          p.provenance = p.provenance || {}; p.provenance[lab] = 'AI labels';
+          if (!p.human_gold){                                   // gold = sentences every AI labeler agrees on
+            const ai = Object.keys(p.provenance).filter(k => p.provenance[k] === 'AI labels');
+            p.methods.GOLD = {}; for (const f of p.figs){ const fs=String(f); p.methods.GOLD[fs] = p.methods[ai[0]][fs].filter(i => ai.every(k => p.methods[k][fs].includes(i))); }
+            p.has_gold = true; D.labels.GOLD = ai.length>1 ? `Gold = ${ai.map(k=>SHORT[k]||k).join(' ∩ ')} agree` : `Gold = ${SHORT[ai[0]]||ai[0]} labels`;
+            if (!D.order.includes('GOLD')) D.order.unshift('GOLD');
+          }
+          added++; first = p; continue;
+        }
+        const list = Array.isArray(j.papers) ? j.papers : [j];
+        for (const p of list){
+          if (!p.sentences || !p.methods || !p.figs) throw new Error('missing sentences/methods/figs');
+          p.split = p.split || 'new'; p.has_gold = !!(p.methods.GOLD); p.provenance = p.provenance || {};
+          p.cue = p.cue || p.sentences.map(()=>[]); p.sent_para = p.sent_para || p.sentences.map((_,i)=>i);
+          for (const k of Object.keys(p.methods)) if (!D.order.includes(k)) { if (k==='GOLD') D.order.unshift(k); else D.order.push(k); D.labels[k] = (j.labels||{})[k] || k; }
+          Object.assign(D.labels, j.labels || {});
+          const old = D.papers.findIndex(q => q.id === p.id);
+          if (old >= 0){                                         // same paper again: merge its methods in
+            const q = D.papers[old]; Object.assign(q.methods, p.methods); Object.assign(q.provenance, p.provenance);
+            q.has_gold = q.has_gold || p.has_gold; first = q;
+          } else { D.papers.unshift(p); first = p; }
+          added++;
+        }
+      } catch(ex){ err.textContent = `Could not read ${file.name}: ${ex.message}. Use a results file made by the any-paper notebook.`; err.hidden = false; }
+    }
+    if (added){ state.p = Math.max(0, D.papers.indexOf(first)); state.f = null; fillPapers(); render(); }
+    e.target.value = '';
+  };
+  D.papers.forEach(p => { if (p.split==='train' || p.split==='test') p.human_gold = true; });
+  fillPapers(); render();
+})();
+</script>

@@ -1,0 +1,114 @@
+\section{Rule-Based Baselines}
+\label{sec:rules}
+
+\subsection{The published \figsum{} methods}
+\label{sec:figsumbase}
+We re-implemented the five methods evaluated by \citet{ramesh2015figsum}.
+\begin{description}[leftmargin=1.2em,style=nextline,itemsep=2pt]
+  \item[SurfaceCue] The sentences that name the figure, and nothing else.
+  \item[Paragraph] Every sentence of every paragraph that contains a citation of the figure.
+  \item[Hybrid] The Paragraph selection, reduced to its most central sentences by the MEAD summariser
+        \citep{radev2004mead}, which favours sentences containing the characteristic words of the selection
+        and sentences that come early.
+  \item[Similarity] The sentences of the whole article whose word counts are most similar (cosine) to the
+        caption.
+  \item[TF-IDF] The same, with each word weighted by its inverse document frequency, so that words that occur
+        throughout the article count for little and distinctive words count for more.
+\end{description}
+On the full GS1 set our implementations reproduce the published F1 closely: Paragraph 0.661 (published 0.66),
+Hybrid 0.619 (0.62), TF-IDF 0.304 (0.30), SurfaceCue 0.572 (0.54) and Similarity 0.265 (0.30). The top half of
+Table~\ref{tab:rules} gives the same methods on our 15 training papers with a breakdown by category.
+
+\subsection{From Paragraph to \bz{} and \bof{}}
+Paragraph has high recall and low precision: a paragraph that cites a figure is mostly about that figure, but
+not entirely. The distance analysis of Figure~\ref{fig:dist} suggests something tighter.
+
+\paragraph{\bz{}.} Select the explicit sentences and, for each of them, the sentence immediately before and
+the sentence immediately after, provided that sentence is in a paragraph that cites the figure.
+
+\paragraph{\bof{}.} We inspected the false positives of \bz{} on development papers and found three recurring
+causes. \bof{} is \bz{} with three filters; an added neighbour sentence is dropped if it
+\begin{enumerate}
+  \item cites a \emph{different} figure;
+  \item is about something that is not this figure: it mentions a table, supplementary material, an additional
+        file, or ``data not shown'';
+  \item lies in a Methods section (a top-level heading that matches \emph{method}, \emph{material} or
+        \emph{procedure}).
+\end{enumerate}
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lrrrrrr}
+\toprule
+Method & P & R & F1 & Near P & Near R & Far R\\
+\midrule
+\multicolumn{7}{l}{\emph{Published \figsum{} methods (our re-implementation)}}\\
+SurfaceCue (explicit only)            & 0.961 & 0.417 & 0.556 & --   & 0.00 & 0.00\\
+Paragraph (published best)            & 0.621 & 0.837 & 0.659 & 0.44 & 0.92 & 0.08\\
+Hybrid                                & 0.656 & 0.657 & 0.616 & 0.51 & 0.61 & 0.03\\
+TF-IDF (top 8 sentences)               & 0.291 & 0.379 & 0.306 & 0.50 & 0.26 & 0.10\\
+Similarity (top 8 sentences)          & 0.245 & 0.328 & 0.263 & 0.51 & 0.25 & 0.07\\
+\midrule
+\multicolumn{7}{l}{\emph{Our rules}}\\
+\pmk{1} sentence, any paragraph       & 0.736 & 0.758 & 0.714 & 0.55 & 0.76 & 0.00\\
+\bz{}: \pmk{1} sentence, same paragraph & 0.799 & 0.742 & 0.735 & 0.62 & 0.72 & 0.00\\
+\pmk{2} sentences, same paragraph     & 0.708 & 0.806 & 0.714 & 0.50 & 0.87 & 0.00\\
+\pmk{3} sentences, same paragraph     & 0.661 & 0.819 & 0.688 & 0.44 & 0.91 & 0.00\\
+\rowcolor{hl}\bof{}: \bz{} with three filters & \best{0.868} & 0.718 & \best{0.752} & \best{0.74} & 0.68 & 0.00\\
+\midrule
+\multicolumn{7}{l}{\emph{Wider windows with the \bof{} filters}}\\
+Filtered \pmk{2}                      & 0.775 & 0.765 & 0.731 & 0.60 & 0.81 & 0.00\\
+Filtered \pmk{3}                      & 0.736 & 0.775 & 0.713 & 0.54 & 0.84 & 0.00\\
+\bottomrule
+\end{tabular}
+\caption{Rule-based methods on the 15 training papers (73 figures). P, R, F1 are per-figure means; near and far
+columns are pooled sentence counts. All of our rules include the explicit sentences; of the 219 explicit sentences selected, 206 are gold (explicit
+precision 0.94, recall 1.00).}
+\label{tab:rules}
+\end{table}
+
+Table~\ref{tab:rules} shows the trade-off. Widening the window raises near recall from 0.72 to 0.91, but
+precision falls faster, so F1 falls; this holds with or without the filters. The filters raise the precision
+of the added neighbour sentences from 0.62 to 0.74 at a small cost in recall. \bof{} reaches F1 0.752,
+compared with 0.659 for the best published method on the same papers. On the earlier 13-paper protocol the
+gain of \bof{} over \bz{} was $+0.026$ with a 95\% interval of $[+0.003, +0.047]$.
+
+One number in the table defines the rest of the project: \textbf{no rule finds any far reference}. Paragraph
+finds a few (far recall 0.08), only because some citing paragraphs are long enough to contain sentences more
+than three away from the citation.
+
+\subsection{Other approaches we tried before transformers}
+\label{sec:othertrials}
+Before turning to transformers we tried a range of classical and lightweight approaches, summarised in
+Table~\ref{tab:other}. None improved on \bof{} reliably.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabularx}{\linewidth}{Lrrrrl}
+\toprule
+Method & P & R & F1 & vs \bof{} & Papers\\
+\midrule
+Feature model: stacked logistic regression       & 0.782 & 0.767 & 0.744 & $-0.026$ & 9 dev\\
+Linear-chain CRF over citation blocks            & 0.779 & 0.762 & 0.738 & $-0.029$ & all 13\\
+Text tiling (coherence-gated extension)          & 0.799 & 0.752 & 0.748 & $-0.019$ & all 13\\
+Anaphora continuation                            & 0.807 & 0.751 & 0.743 & $-0.027$ & 9 dev\\
+Small LLM as judge, \pmk{3} window               & 0.802 & 0.726 & 0.718 & $-0.052$ & 9 dev\\
+\bof{} + small LLM extends to distance 2--3      & 0.882 & 0.751 & 0.784 & $+0.014$ & 9 dev\\
+\bof{} + ``figure-talk'' far selection           & 0.898 & 0.722 & 0.770 & $\phantom{+}0.000$ & 9 dev\\
+\bof{} + most caption-similar far sentence       & 0.712 & 0.726 & 0.693 & $-0.059$ & 15 train\\
+Frontier LLMs as zero-shot annotators            & --    & --    & --    & $\approx-0.05$ & 6\\
+\bottomrule
+\end{tabularx}
+\caption{Other approaches. Each row is compared with \bof{} on the same papers, which differ between rows
+because the experiments were run in different phases (\bof{} scores 0.770 on the 9 development papers, 0.767
+on all 13, and 0.752 on the 15 training papers).}
+\label{tab:other}
+\end{table}
+
+Each of these approaches is described briefly in Appendix~\ref{app:other}.
+
+Two lessons carried forward. First, position relative to a citation is by far the strongest signal, so any
+learned model must have access to it. Second, ``sounds like a description of a figure'' is not the same as
+``is about this figure''; this distinction returns in Section~\ref{sec:fakelabels}.

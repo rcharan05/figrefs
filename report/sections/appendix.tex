@@ -1,0 +1,139 @@
+\section{Parsing Routes}
+\label{app:parsing}
+Every input format is converted into the same article model (Section~\ref{sec:pipeline}).
+\begin{description}[leftmargin=1.2em,style=nextline,itemsep=3pt]
+  \item[Structured XML (JATS)] The cleanest input. Sections, paragraphs, captions and figure citations are
+        read directly from the markup.
+  \item[PDF through GROBID] GROBID 0.9.1 \citep{lopez2009grobid} produces structured XML from the PDF. We take
+        figures, captions and paragraphs from its output, rebuild section labels, re-split sentences with our
+        own splitter, and keep figure citations from both GROBID's reference tags and our grammar.
+  \item[PDF through our own parser] A layout parser built on PyMuPDF that groups lines into paragraphs, finds
+        headings and captions, filters page furniture (running headers, side panels, icon glyphs), and stops at
+        the reference list. It needs no external service and is what the command-line tool uses by default.
+  \item[\LaTeX{} source] Figures are numbered as \LaTeX{} numbers them, and \verb|\ref| commands to figure
+        labels become explicit references.
+\end{description}
+Sentences are split by an abbreviation-aware splitter, so that ``Fig.~3'' or ``et al.'' does not end a
+sentence.
+
+\section{Other Approaches in Detail}
+\label{app:other}
+This appendix describes the approaches summarised in Table~\ref{tab:other} (Section~\ref{sec:othertrials}).
+
+\begin{description}[leftmargin=1.2em,style=nextline,itemsep=3pt]
+  \item[Feature models] Logistic regression and gradient-boosted trees over hand-built features (distance and
+        direction to the citation, paragraph and section, cue phrases, similarity to the caption, coreference
+        links), including a stacked variant. They essentially relearned the rule, and they were fragile: when
+        the text came from PDFs instead of XML, a model trained on XML features degraded sharply.
+  \item[Linear-chain CRF] Annotators tend to mark contiguous runs of sentences. A conditional random field
+        \citep{lafferty2001crf} labels the block of sentences around a citation jointly and learns how likely a
+        run is to continue or stop. With so few training papers it did not learn better transitions than the
+        fixed \pmk{1} rule.
+  \item[Text tiling] In the spirit of TextTiling \citep{hearst1997texttiling}, extend outward from each
+        citation for as long as the word overlap between neighbouring sentences stays above a threshold.
+        Word overlap is too weak a signal: a follow-up such as ``This effect was abolished by \ldots'' shares
+        few words with the sentence it continues.
+  \item[Anaphora continuation] Follow sentences that begin with ``These results'', ``This'', ``Such'' and
+        similar back to a citing sentence. Slightly worse than the rule.
+  \item[Small language models as judges] Local models of 1.5 to 3 billion parameters were asked whether a
+        sentence is about a given figure. Their ranking of near sentences reached an AUC of at most 0.708.
+        Letting such a judge extend \bof{} to distance 2--3 gave $+0.014$ on development papers but was not
+        significant on the held-out papers of that protocol.
+  \item[``Figure-talk'' classifier] A classifier trained, without any \figsum{} labels, to recognise prose that
+        describes a figure: on 200 bioRxiv papers, a sentence is positive if it cites a figure, and the
+        citation is masked out. On \figsum{} it ranked near sentences \emph{worse than chance} (AUC 0.46), and
+        a tuned selection of far sentences based on it chose to add nothing.
+  \item[Caption-similar far sentences] Adding even the single far sentence most similar to the caption costs
+        0.059 F1; only four of the added sentences are gold.
+  \item[Frontier LLMs as annotators] In a separate test on six papers, two proprietary LLMs used as zero-shot
+        annotators agreed with the gold at a human-like level ($\kappa\approx0.73$) and were the only method
+        with real precision on far sentences (about 0.32), but their F1 was about 0.05 below \bof{}. Since
+        the tool must run locally, they were excluded from the tool and from label creation by design.
+  \item[Embedding retrievers] Dense sentence embeddings (BGE, SPECTER2, mpnet) and a neural reranker added
+        nothing over TF-IDF similarity for selecting sentences by their similarity to the caption.
+\end{description}
+
+\section{Hyperparameters}
+\label{app:hyper}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\linewidth}{lLL}
+\toprule
+ & Cross-encoder (C0 / C0L) & Span tagger (SPAN / SPAN\_ES)\\
+\midrule
+Backbone & \texttt{microsoft/deberta-v3-base} (184M) / \texttt{-large} (435M) & \texttt{answerdotai/ModernBERT-large} (395M)\\
+Head & pooled first token $\rightarrow$ linear $\rightarrow$ 1 logit & hidden state at each sentence marker $\rightarrow$ linear ($1024\rightarrow1$)\\
+Input & caption + tagged candidate with nearest citing sentence & caption + sentences of a window with inline structure\\
+Maximum length & 320 tokens (longest-first truncation) & 2{,}048 tokens; header $\le200$, sentence $\le96$\\
+Caption & prefix ``Fig.~$N$.'' removed, $\le700$ characters & same\\
+Training examples & all positives, all explicit/near pairs, 20\% of far negatives per epoch & windows with a citation or gold sentence, plus 30\% of others\\
+Augmentation & (C0a/C0aL only) citation-deleted copies; paraphrase swap $p=0.3$ & citation-deleted copy $p=0.3$; paraphrase swap $p=0.3$\\
+Loss & binary cross-entropy, positive weight = neg/pos & binary cross-entropy over markers, positive weight = min(neg/pos, 8)\\
+Optimiser & AdamW, weight decay 0.01 & AdamW, weight decay 0.01\\
+Learning rate & $2\times10^{-5}$ (base), $1\times10^{-5}$ (large) & $2\times10^{-5}$\\
+Schedule & 10\% linear warm-up, linear decay & same; SPAN\_ES decays over 8 epochs\\
+Batch & 16 (large: $4\times4$ accumulation) & 8 ($1\times8$ accumulation)\\
+Epochs & 3 & 5; SPAN\_ES: up to 8 with early stopping\\
+Other & gradient clipping 1.0, mixed precision, gradient checkpointing (large) & gradient clipping 1.0, mixed precision, gradient checkpointing\\
+Evaluation & 5 folds $\times$ 3 seeds, mean logit & same\\
+Hardware & 2 $\times$ NVIDIA T4 (Kaggle) & same\\
+\bottomrule
+\end{tabularx}
+\caption{Training configuration of the two model families.}
+\end{table}
+
+\paragraph{Early stopping (SPAN\_ES).} Validation every half epoch on the three former test papers; metric:
+average precision smoothed over the last two checks; no stop before epoch 3; stop after four checks without
+a new best; best weights restored.
+
+\paragraph{Decision rule of the registered ensemble.} Mean of the C0L and SPAN logits; minus the mean over
+the figure's citing sentences (or the median over all its sentences if it is never cited); select if the
+result is at least $-3.6$; always include the citing sentences.
+
+\paragraph{Figure text (SPAN\_VIS).} Qwen2-VL-2B-Instruct, greedy decoding with a repetition penalty of 1.15.
+Header: caption, then ``Figure text:'' with the OCR output, then ``Figure shows:'' with the description, up to
+400 tokens.
+
+\section{Experiment Log}
+\label{app:log}
+
+Table~\ref{tab:log} lists every learned configuration that was trained with the cross-encoder or span-tagger
+code, including those that were abandoned.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\linewidth}{llLr}
+\toprule
+Run & Name & Description & OOF F1\\
+\midrule
+1 & C0 & DeBERTa-v3-base cross-encoder on every pair & 0.728\\
+1 & S1 & Stage 1: masked caption matching, all negatives & 0.220\\
+1 & S2s & Stage 2 from the plain pre-trained model & 0.682\\
+1 & S2f & Stage 2 from S1 & 0.670\\
+1 & S2f\_noA3 & S2f without citation-deleted copies & 0.632\\
+2a & S1b & Stage 1 with 4 negatives per positive (near AUC 0.52) & --\\
+2a & S2b\_f & Stage 2 in the C0 input layout, from S1b & 0.666\\
+2b & C0a & C0 + citation-deleted copies + paraphrases & 0.728\\
+2b & C0L & DeBERTa-v3-large & 0.725 / 0.752$^{\dagger}$\\
+3 & C0aL & C0L + augmentations & 0.723\\
+3 & C0Lctx & C0L + neighbouring sentences (448 tokens) & 0.735\\
+3 & SPAN & ModernBERT-large span tagger, 5 epochs & 0.747\\
+4 & SPAN\_ES & SPAN with early stopping & 0.763\\
+4 & SPAN\_VIS & SPAN\_ES + figure OCR and description & 0.742\\
+\bottomrule
+\end{tabularx}
+\caption{All transformer configurations. $^{\dagger}$z-score rule / raw-logit rule. Runs 1--2 use the z-score
+rule, run 3 the raw rule, run 4 the anchored rule.}
+\label{tab:log}
+\end{table}
+
+\section{Repository}
+The code and the instructions to reproduce every table are at \repourl. The three trained models used by the tool (C0L, SPAN and SPAN\_ES, about 6\,GB in total) are at \modelurl. In brief:
+\texttt{figrefs/} is the tool; \texttt{demo/} runs the learned models on new papers and builds the result
+viewer; \texttt{eval/} holds the benchmark code, the reproduction of the published baselines and the earlier
+experiments; \texttt{eval/figsum/run1/} holds the training scripts of every transformer run, the offline
+scorer and the sealed-test plan and script; \texttt{scripts/} fetches data; and \texttt{report/} holds this
+document. The \texttt{README} describes every file.

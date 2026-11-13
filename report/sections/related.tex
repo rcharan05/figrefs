@@ -1,0 +1,39 @@
+\section{Related Work}
+\label{sec:related}
+
+\paragraph{Figure-associated text.} \citet{ramesh2015figsum} introduced \figsum{}, a system that summarises a
+figure from the text of its article, together with two human gold standards. The first, GS1, lists every
+sentence that annotators judged to be associated with each figure, whether or not it names the figure; this is
+exactly our task. They compare five unsupervised methods on GS1 (described in Section~\ref{sec:figsumbase});
+the best, which simply returns every paragraph that cites the figure, reaches F1 0.66. We found no later work
+that reports results on GS1, so this is the state of the art for the task as far as we can establish.
+Earlier, \citet{bockhorst2012beyond} linked sentences of the \emph{abstract} to figures; the setting is
+narrower (abstract sentences only), but we borrowed their observation that the order of sentences and figures
+is informative.
+
+\paragraph{Datasets of figures and their mentions.} Several large datasets pair figures with the text that
+cites them. MedICaT \citep{subramanian2020medicat} contains about 217,000 figures from 131,000 open-access
+biomedical papers and, for 74\% of the figures, the inline references taken from S2ORC \citep{lo2020s2orc}.
+SciCap+ \citep{yang2023scicapplus} extends a figure-captioning dataset with the paragraphs that mention each
+figure and with text read from the image by OCR. In both, the associated text is found through explicit
+mentions; neither labels implicit references. They are therefore not training data for our task, but they
+suggested two ideas that we test: mining free labels from citations (Section~\ref{sec:fakelabels}) and giving
+the model text extracted from the figure image (Section~\ref{sec:vis}).
+
+\paragraph{How much does the image help?} Work on generating figure captions has repeatedly found that the
+text around a figure carries most of the usable information. \citet{huang2023summaries} show that more than 75\% of
+caption words can be aligned with the paragraphs that mention the figure, and that summarising those paragraphs
+as text outperforms earlier vision-based captioning. In SciCap+, the figure image alone gives very low scores,
+and removing generic image features from the full model does not hurt; the authors describe those features as
+acting like noise because the image encoder was not trained on scientific figures. OCR text, in contrast, did
+help in their experiments. We return to this comparison when we report our own experiment with figure text.
+
+\paragraph{Document parsing.} GROBID \citep{lopez2009grobid} converts scholarly PDFs to structured XML and is
+the standard open tool for this. We use it as one of our parsing routes and first verified our installation
+against its published benchmark (figure-reference F1 75.1 in our run, 74.26 published).
+
+\paragraph{Encoders.} Our learned models fine-tune two pre-trained transformer encoders. DeBERTa-v3
+\citep{he2021deberta,he2023debertav3} represents the content and the position of each token separately and is
+pre-trained by detecting replaced tokens; it is among the strongest encoders for judging pairs of texts.
+ModernBERT \citep{warner2024modernbert} is a recent encoder with a context of 8{,}192 tokens, which makes it
+possible to read a long stretch of a paper in one pass.

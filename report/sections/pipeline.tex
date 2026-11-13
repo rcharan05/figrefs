@@ -1,0 +1,48 @@
+\section{The Pipeline}
+\label{sec:pipeline}
+
+Figure~\ref{fig:pipeline} shows the stages of the tool. Every input format is converted to one common
+representation, the \emph{article model}: the sentences in reading order, the paragraph and section of each
+sentence, the figures with their captions, and for each sentence the set of figures that it cites. Everything
+after parsing works on this representation only.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+  box/.style={draw=navy!40, fill=soft, rounded corners=2pt, align=center, font=\small,
+              minimum height=1.25cm, text width=2.35cm},
+  dark/.style={box, fill=navy, text=white, draw=navy},
+  arr/.style={-{Stealth[length=5pt]}, thick, accent}]
+\node[box] (in) {\textbf{Input}\\ XML, \LaTeX{},\\ or PDF};
+\node[box, right=0.45cm of in] (parse) {\textbf{Parse}\\ JATS / GROBID /\\ own PDF parser};
+\node[box, right=0.45cm of parse] (art) {\textbf{Article model}\\ sentences, sections,\\ captions};
+\node[box, right=0.45cm of art] (exp) {\textbf{Explicit}\\ citation\\ grammar};
+\node[dark, right=0.45cm of exp] (imp) {\textbf{Implicit}\\ rule \bof{} or\\ learned models};
+\node[box, below=0.6cm of imp] (out) {\textbf{Output}\\ JSON + HTML\\ report};
+\draw[arr] (in)--(parse); \draw[arr] (parse)--(art); \draw[arr] (art)--(exp); \draw[arr] (exp)--(imp);
+\draw[arr] (imp)--(out);
+\end{tikzpicture}
+\caption{Stages of the tool.}
+\label{fig:pipeline}
+\end{figure}
+
+Papers can be read from structured XML, from \LaTeX{} source, or from PDF through GROBID or through our own
+PyMuPDF-based layout parser; Appendix~\ref{app:parsing} describes these routes.
+
+\subsection{Explicit references}
+Explicit references are found by a regular-expression grammar. It recognises the keyword in its common forms
+(Fig., Figure, Figs., Figures), lists (``Figs.~2 and 3''), ranges (``Figs.~2--4''), sub-figure letters (``3B'',
+``4A,B''), and, only when the surrounding context supports it, a bare panel reference such as ``4(a)''. A
+mention is kept only if it refers to a figure that was detected in the paper. At the sentence level it reaches
+an F1 of 0.93 on 28 arXiv papers and 0.85 on 177 bioRxiv papers that were not used during its development.
+
+\subsection{The command-line tool}
+\begin{Verbatim}[fontsize=\small,frame=single,framesep=6pt,rulecolor=\color{navy!30}]
+python -m figrefs <pdf or directory> -o out/
+\end{Verbatim}
+For each paper the tool writes \texttt{result.json} (for every figure: the cropped image, the caption, the
+explicit sentences, the implicit sentences and any mentions that could not be matched to a figure) and a
+self-contained \texttt{report.html}; for a directory it also writes \texttt{all\_results.json}. With the rule
+\bof{} the tool needs no neural model and takes about four seconds on a CPU for a 21-figure paper. The learned
+models run through a separate inference script (Section~\ref{sec:cs}); on a laptop they take about three to
+four minutes per paper, and less on a GPU.

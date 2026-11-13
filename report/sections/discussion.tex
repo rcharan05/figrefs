@@ -1,0 +1,71 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{What we learned}
+\begin{enumerate}
+  \item \textbf{On tiny data, a careful rule is a strong baseline.} Half of all implicit references are one
+        sentence from a citation, and three filters derived from error analysis remove the common false
+        positives. \bof{} beat the published best by nine points of F1 and resisted more than a dozen learned
+        alternatives. Any future work on this task should compare against it, and against plain windows.
+  \item \textbf{Manufactured labels did not transfer.} Deleting or masking citations to create ``implicit''
+        examples failed three times in three different forms (the figure-talk classifier, free labels from
+        6{,}049 papers, and the masked first stage of the curriculum). The sentences that authors attach
+        citations to are not the sentences that readers mark as implicit references.
+  \item \textbf{Ranking and selection are different problems.} Larger models and more context improved the
+        ranking of sentences steadily (near AUC from 0.822 to 0.899), but F1 moved only when the decision rule
+        changed: from a per-paper z-score to the raw score, and then to a score anchored on each figure's own
+        citing sentences. We consider anchoring the most reusable idea in this work, since it applies to any
+        scorer.
+  \item \textbf{Two views are better than one.} A pairwise model that is told the position of a sentence and a
+        sequence model that sees the context make different errors, and their average is the only system
+        that beat the rule significantly on unseen papers.
+  \item \textbf{Labels are the ceiling.} With 112 far examples, no model learned far references. The models
+        became cautious about them, which protects precision but leaves a third of the implicit references
+        unreachable.
+\end{enumerate}
+
+\subsection{Limitations}
+\begin{itemize}
+  \item \textbf{Small benchmark, wide intervals.} The test set has 18 figures. The pre-registered gain is
+        significant, but only just (Section~\ref{sec:test}).
+  \item \textbf{Subjective gold.} Human annotators agree at $\kappa=0.68$; part of every system's error is
+        disagreement between people.
+  \item \textbf{One domain.} All training and all human-labelled evaluation is on biomedical articles. The
+        check on a computer-science paper is encouraging but is not a measurement (Section~\ref{sec:cs}).
+  \item \textbf{Selection effects.} About twenty model variants were compared on the same 15 papers, so the
+        best out-of-fold number is optimistic; the filters of \bof{} were designed on some of those papers;
+        and the published 0.66 was measured on a slightly different article set.
+  \item \textbf{The test set has been used.} After the single pre-registered run, the three test papers
+        served as validation data for early stopping. The models of steps 10--12 have no clean test number,
+        and the next clean evaluation needs new labelled papers.
+  \item \textbf{Input length of the cross-encoder.} We estimate that roughly a third of the cross-encoder's
+        inputs exceed its 320-token limit, in which case the end of the longer text (usually the caption) is
+        cut. A longer limit is an easy improvement that we did not have the GPU budget to test.
+  \item \textbf{Cost.} The learned models take three to four minutes per paper on a laptop, where the rule
+        takes seconds. Figure detection from PDFs still misses about one figure in ten.
+\end{itemize}
+
+\subsection{Future work}
+\begin{itemize}
+  \item \textbf{More labelled data.} This is the single change most likely to help, above all for far
+        references. Labelling can be made efficient by pre-filling the rule's selection for an annotator to
+        correct.
+  \item \textbf{Other fields.} Label a set of computer-science papers. Their \LaTeX{} sources give the explicit
+        references for free, so annotators need only mark implicit ones. This would provide both a clean test
+        set and the first real out-of-domain result.
+  \item \textbf{Final models on all data.} Retrain on all 18 papers, which adds 30 far examples to the 112.
+  \item \textbf{Far references specifically.} Longer windows for the span tagger, and a second-stage model
+        that re-ranks far candidates.
+  \item \textbf{Figure content.} Repeat the image-text experiment with a vision model trained on scientific
+        figures, and on papers whose figures carry more text.
+\end{itemize}
+
+\section{Conclusion}
+We built a tool that collects, for every figure of a research paper, the sentences that discuss it. Explicit
+references are handled by a grammar with a sentence-level F1 of 0.85 on held-out papers. For implicit
+references we established a strong and simple rule, tried a wide range of ways to improve on it, and report
+all of them. Most failed; the ones that succeeded were unglamorous: train on all the real data, read more
+context at once, and calibrate the decision for each figure. The resulting ensemble of two fine-tuned encoders
+is, to our knowledge, the first learned system shown to beat a positional rule on \figsum{} GS1 on unseen
+papers under a pre-registered protocol, with the qualifications we have stated. The main obstacle to further
+progress is not modelling but labelled data, particularly for references that are far from any citation.

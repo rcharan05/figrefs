@@ -1,0 +1,81 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage[table]{xcolor}
+\usepackage{fancyvrb}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.17}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage[colorlinks=true,linkcolor=navy,citecolor=navy,urlcolor=navy]{hyperref}
+
+\definecolor{navy}{HTML}{14213D}
+\definecolor{accent}{HTML}{B8551B}
+\definecolor{steel}{HTML}{2B5C8A}
+\definecolor{soft}{HTML}{EEF1F4}
+\definecolor{hl}{HTML}{FCEBDD}
+
+\captionsetup{font=small,labelfont=bf}
+\setlist{itemsep=2pt,topsep=4pt}
+\newcommand{\bof}{\textsc{B0f}}
+\newcommand{\bz}{\textsc{B0}}
+\newcommand{\figsum}{FigSum+}
+\newcommand{\best}[1]{\textbf{#1}}
+\newcommand{\pmk}[1]{$\pm#1$}
+\newcolumntype{R}{>{\raggedleft\arraybackslash}X}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+
+% ---- edit these two lines ----
+\newcommand{\supervisor}{Prof.\ Soumya Dutta}
+\newcommand{\repourl}{[GitHub repository link]}
+\newcommand{\modelurl}{\url{https://huggingface.co/iLuvU2/figrefs-models}}
+% ------------------------------
+
+\title{\vspace{-1.2cm}\textbf{Finding Every Sentence That Talks About a Figure}\\[4pt]
+\large Explicit and Implicit Figure References in Research Papers}
+\author{Charan (Roll No.\ 230819)\\[2pt]
+\small Undergraduate Project, Department of Computer Science and Engineering, IIT Kanpur\\
+\small Supervisor: \supervisor \qquad Fall 2026}
+\date{November 2026}
+
+\begin{document}
+\maketitle
+
+\input{sections/abstract}
+\tableofcontents
+\clearpage
+
+\input{sections/intro}
+\input{sections/related}
+\input{sections/task}
+\input{sections/data}
+\input{sections/pipeline}
+\input{sections/rules}
+\input{sections/models}
+\input{sections/results}
+\input{sections/cs}
+\input{sections/discussion}
+
+\bibliographystyle{unsrtnat}
+\bibliography{refs}
+
+\clearpage
+\appendix
+\input{sections/appendix}
+
+\end{document}

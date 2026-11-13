@@ -1,0 +1,16 @@
+[project]
+name = "figrefs"
+version = "0.1.0"
+description = "For every figure in a research-paper PDF, extract the paragraphs and sentences that discuss it."
+requires-python = ">=3.9"
+dependencies = ["pymupdf>=1.24", "scikit-learn>=1.3", "numpy>=1.24"]
+
+[project.scripts]
+figrefs = "figrefs.__main__:main"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["figrefs"]
