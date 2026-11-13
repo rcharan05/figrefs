@@ -1,0 +1,1061 @@
+{
+ "summary": {
+  "ours": {
+   "papers": 28,
+   "gt_pairs": 456,
+   "pred_pairs": 462,
+   "tau05": {
+    "precision": 0.924,
+    "recall": 0.936,
+    "f1": 0.93
+   },
+   "tau09": {
+    "precision": 0.788,
+    "recall": 0.798,
+    "f1": 0.793
+   }
+  },
+  "grobid082": {
+   "papers": 28,
+   "gt_pairs": 456,
+   "pred_pairs": 463,
+   "tau05": {
+    "precision": 0.827,
+    "recall": 0.84,
+    "f1": 0.834
+   },
+   "tau09": {
+    "precision": 0.702,
+    "recall": 0.713,
+    "f1": 0.707
+   }
+  },
+  "grobid090": {
+   "papers": 28,
+   "gt_pairs": 456,
+   "pred_pairs": 458,
+   "tau05": {
+    "precision": 0.845,
+    "recall": 0.849,
+    "f1": 0.847
+   },
+   "tau09": {
+    "precision": 0.725,
+    "recall": 0.728,
+    "f1": 0.726
+   }
+  },
+  "grobid082+split": {
+   "papers": 28,
+   "gt_pairs": 456,
+   "pred_pairs": 462,
+   "tau05": {
+    "precision": 0.829,
+    "recall": 0.84,
+    "f1": 0.834
+   },
+   "tau09": {
+    "precision": 0.745,
+    "recall": 0.754,
+    "f1": 0.749
+   }
+  },
+  "grobid090+split": {
+   "papers": 28,
+   "gt_pairs": 456,
+   "pred_pairs": 459,
+   "tau05": {
+    "precision": 0.845,
+    "recall": 0.851,
+    "f1": 0.848
+   },
+   "tau09": {
+    "precision": 0.763,
+    "recall": 0.768,
+    "f1": 0.765
+   }
+  }
+ },
+ "per_paper": [
+  {
+   "paper": "1410.6022v1",
+   "gt_pairs": 4,
+   "gt_dropped": 0,
+   "ours": {
+    "gt": 4,
+    "pred": 4,
+    "tp_05": 4,
+    "tp_09": 3
+   },
+   "grobid082": {
+    "gt": 4,
+    "pred": 4,
+    "tp_05": 4,
+    "tp_09": 3
+   },
+   "grobid090": {
+    "gt": 4,
+    "pred": 4,
+    "tp_05": 4,
+    "tp_09": 3
+   },
+   "grobid082+split": {
+    "gt": 4,
+    "pred": 4,
+    "tp_05": 4,
+    "tp_09": 3
+   },
+   "grobid090+split": {
+    "gt": 4,
+    "pred": 4,
+    "tp_05": 4,
+    "tp_09": 3
+   }
+  },
+  {
+   "paper": "1610.04281v1",
+   "gt_pairs": 6,
+   "gt_dropped": 0,
+   "ours": {
+    "gt": 6,
+    "pred": 6,
+    "tp_05": 6,
+    "tp_09": 2
+   },
+   "grobid082": {
+    "gt": 6,
+    "pred": 7,
+    "tp_05": 6,
+    "tp_09": 2
+   },
+   "grobid090": {
+    "gt": 6,
+    "pred": 6,
+    "tp_05": 6,
+    "tp_09": 2
+   },
+   "grobid082+split": {
+    "gt": 6,
+    "pred": 7,
+    "tp_05": 6,
+    "tp_09": 2
+   },
+   "grobid090+split": {
+    "gt": 6,
+    "pred": 6,
+    "tp_05": 6,
+    "tp_09": 2
+   }
+  },
+  {
+   "paper": "1705.02937v2",
+   "gt_pairs": 22,
+   "gt_dropped": 0,
+   "ours": {
+    "gt": 22,
+    "pred": 22,
+    "tp_05": 19,
+    "tp_09": 18
+   },
+   "grobid082": {
+    "gt": 22,
+    "pred": 21,
+    "tp_05": 15,
+    "tp_09": 15
+   },
+   "grobid090": {
+    "gt": 22,
+    "pred": 20,
+    "tp_05": 15,
+    "tp_09": 15
+   },
+   "grobid082+split": {
+    "gt": 22,
+    "pred": 21,
+    "tp_05": 14,
+    "tp_09": 14
+   },
+   "grobid090+split": {
+    "gt": 22,
+    "pred": 20,
+    "tp_05": 14,
+    "tp_09": 14
+   }
+  },
+  {
+   "paper": "1710.09545v2",
+   "gt_pairs": 31,
+   "gt_dropped": 0,
+   "ours": {
+    "gt": 31,
+    "pred": 31,
+    "tp_05": 30,
+    "tp_09": 28
+   },
+   "grobid082": {
+    "gt": 31,
+    "pred": 34,
+    "tp_05": 31,
+    "tp_09": 30
+   },
+   "grobid090": {
+    "gt": 31,
+    "pred": 35,
+    "tp_05": 29,
+    "tp_09": 28
+   },
+   "grobid082+split": {
+    "gt": 31,
+    "pred": 34,
+    "tp_05": 31,
+    "tp_09": 30
+   },
+   "grobid090+split": {
+    "gt": 31,
+    "pred": 35,
+    "tp_05": 29,
+    "tp_09": 28
+   }
+  },
+  {
+   "paper": "1908.07752v2",
+   "gt_pairs": 9,
+   "gt_dropped": 1,
+   "ours": {
+    "gt": 9,
+    "pred": 6,
+    "tp_05": 6,
+    "tp_09": 5
+   },
+   "grobid082": {
+    "gt": 9,
+    "pred": 9,
+    "tp_05": 9,
+    "tp_09": 8
+   },
+   "grobid090": {
+    "gt": 9,
+    "pred": 9,
+    "tp_05": 9,
+    "tp_09": 9
+   },
+   "grobid082+split": {
+    "gt": 9,
+    "pred": 9,
+    "tp_05": 9,
+    "tp_09": 9
+   },
+   "grobid090+split": {
+    "gt": 9,
+    "pred": 9,
+    "tp_05": 9,
+    "tp_09": 9
+   }
+  },
+  {
+   "paper": "1909.04835v1",
+   "gt_pairs": 19,
+   "gt_dropped": 0,
+   "ours": {
+    "gt": 19,
+    "pred": 18,
+    "tp_05": 18,
+    "tp_09": 17
+   },
+   "grobid082": {
+    "gt": 19,
+    "pred": 17,
+    "tp_05": 15,
+    "tp_09": 14
+   },
+   "grobid090": {
+    "gt": 19,
+    "pred": 20,
+    "tp_05": 16,
+    "tp_09": 15
+   },
+   "grobid082+split": {
+    "gt": 19,
+    "pred": 17,
+    "tp_05": 16,
+    "tp_09": 16
+   },
+   "grobid090+split": {
+    "gt": 19,
+    "pred": 20,
+    "tp_05": 17,
+    "tp_09": 17
+   }
+  },
+  {
+   "paper": "2007.04299v3",
+   "gt_pairs": 35,
+   "gt_dropped": 0,
+   "ours": {
+    "gt": 35,
+    "pred": 35,
+    "tp_05": 35,
+    "tp_09": 34
+   },
+   "grobid082": {
+    "gt": 35,
+    "pred": 22,
+    "tp_05": 18,
+    "tp_09": 16
+   },
+   "grobid090": {
+    "gt": 35,
+    "pred": 18,
+    "tp_05": 14,
+    "tp_09": 13
+   },
+   "grobid082+split": {
+    "gt": 35,
+    "pred": 22,
+    "tp_05": 18,
+    "tp_09": 16
+   },
+   "grobid090+split": {
+    "gt": 35,
+    "pred": 18,
+    "tp_05": 14,
+    "tp_09": 14
+   }
+  },
+  {
+   "paper": "2007.15227v2",
+   "gt_pairs": 22,
+   "gt_dropped": 0,
+   "ours": {
+    "gt": 22,
+    "pred": 22,
+    "tp_05": 21,
+    "tp_09": 20
+   },
+   "grobid082": {
+    "gt": 22,
+    "pred": 21,
+    "tp_05": 21,
+    "tp_09": 19
+   },
+   "grobid090": {
+    "gt": 22,
+    "pred": 22,
+    "tp_05": 21,
+    "tp_09": 19
+   },
+   "grobid082+split": {
+    "gt": 22,
+    "pred": 22,
+    "tp_05": 21,
+    "tp_09": 20
+   },
+   "grobid090+split": {
+    "gt": 22,
+    "pred": 23,
+    "tp_05": 21,
+    "tp_09": 20
+   }
+  },
+  {
+   "paper": "2008.06134v1",
+   "gt_pairs": 16,
+   "gt_dropped": 0,
+   "ours": {
+    "gt": 16,
+    "pred": 16,
+    "tp_05": 16,
+    "tp_09": 15
+   },
+   "grobid082": {
+    "gt": 16,
+    "pred": 14,
+    "tp_05": 11,
+    "tp_09": 11
+   },
+   "grobid090": {
+    "gt": 16,
+    "pred": 15,
+    "tp_05": 11,
+    "tp_09": 10
+   },
+   "grobid082+split": {
+    "gt": 16,
+    "pred": 14,
+    "tp_05": 11,
+    "tp_09": 11
+   },
+   "grobid090+split": {
+    "gt": 16,
+    "pred": 15,
+    "tp_05": 11,
+    "tp_09": 10
+   }
+  },
+  {
+   "paper": "2009.01399v1",
+   "gt_pairs": 26,
+   "gt_dropped": 0,
+   "ours": {
+    "gt": 26,
+    "pred": 26,
+    "tp_05": 26,
+    "tp_09": 26
+   },
+   "grobid082": {
+    "gt": 26,
+    "pred": 27,
+    "tp_05": 26,
+    "tp_09": 24
+   },
+   "grobid090": {
+    "gt": 26,
+    "pred": 27,
+    "tp_05": 25,
+    "tp_09": 23
+   },
+   "grobid082+split": {
+    "gt": 26,
+    "pred": 27,
+    "tp_05": 26,
+    "tp_09": 25
+   },
+   "grobid090+split": {
+    "gt": 26,
+    "pred": 27,
+    "tp_05": 25,
+    "tp_09": 24
+   }
+  },
+  {
+   "paper": "2009.02122v2",
+   "gt_pairs": 20,
+   "gt_dropped": 0,
+   "ours": {
+    "gt": 20,
+    "pred": 19,
+    "tp_05": 19,
+    "tp_09": 19
+   },
+   "grobid082": {
+    "gt": 20,
+    "pred": 22,
+    "tp_05": 20,
+    "tp_09": 18
+   },
+   "grobid090": {
+    "gt": 20,
+    "pred": 22,
+    "tp_05": 20,
+    "tp_09": 18
+   },
+   "grobid082+split": {
+    "gt": 20,
+    "pred": 22,
+    "tp_05": 20,
+    "tp_09": 20
+   },
+   "grobid090+split": {
+    "gt": 20,
+    "pred": 22,
+    "tp_05": 20,
+    "tp_09": 20
+   }
+  },
+  {
+   "paper": "2010.09040v2",
+   "gt_pairs": 25,
+   "gt_dropped": 2,
+   "ours": {
+    "gt": 25,
+    "pred": 36,
+    "tp_05": 22,
+    "tp_09": 20
+   },
+   "grobid082": {
+    "gt": 25,
+    "pred": 31,
+    "tp_05": 16,
+    "tp_09": 15
+   },
+   "grobid090": {
+    "gt": 25,
+    "pred": 35,
+    "tp_05": 19,
+    "tp_09": 17
+   },
+   "grobid082+split": {
+    "gt": 25,
+    "pred": 31,
+    "tp_05": 16,
+    "tp_09": 15
+   },
+   "grobid090+split": {
+    "gt": 25,
+    "pred": 36,
+    "tp_05": 19,
+    "tp_09": 17
+   }
+  },
+  {
+   "paper": "2106.05429v1",
+   "gt_pairs": 14,
+   "gt_dropped": 0,
+   "ours": {
+    "gt": 14,
+    "pred": 14,
+    "tp_05": 12,
+    "tp_09": 7
+   },
+   "grobid082": {
+    "gt": 14,
+    "pred": 14,
+    "tp_05": 13,
+    "tp_09": 11
+   },
+   "grobid090": {
+    "gt": 14,
+    "pred": 14,
+    "tp_05": 11,
+    "tp_09": 10
+   },
+   "grobid082+split": {
+    "gt": 14,
+    "pred": 14,
+    "tp_05": 12,
+    "tp_09": 8
+   },
+   "grobid090+split": {
+    "gt": 14,
+    "pred": 14,
+    "tp_05": 10,
+    "tp_09": 7
+   }
+  },
+  {
+   "paper": "2107.12672v1",
+   "gt_pairs": 25,
+   "gt_dropped": 0,
+   "ours": {
+    "gt": 25,
+    "pred": 24,
+    "tp_05": 23,
+    "tp_09": 22
+   },
+   "grobid082": {
+    "gt": 25,
+    "pred": 25,
+    "tp_05": 18,
+    "tp_09": 15
+   },
+   "grobid090": {
+    "gt": 25,
+    "pred": 26,
+    "tp_05": 24,
+    "tp_09": 21
+   },
+   "grobid082+split": {
+    "gt": 25,
+    "pred": 25,
+    "tp_05": 18,
+    "tp_09": 17
+   },
+   "grobid090+split": {
+    "gt": 25,
+    "pred": 26,
+    "tp_05": 24,
+    "tp_09": 23
+   }
+  },
+  {
+   "paper": "2303.12920v2",
+   "gt_pairs": 15,
+   "gt_dropped": 0,
+   "ours": {
+    "gt": 15,
+    "pred": 16,
+    "tp_05": 15,
+    "tp_09": 13
+   },
+   "grobid082": {
+    "gt": 15,
+    "pred": 13,
+    "tp_05": 12,
+    "tp_09": 11
+   },
+   "grobid090": {
+    "gt": 15,
+    "pred": 13,
+    "tp_05": 12,
+    "tp_09": 11
+   },
+   "grobid082+split": {
+    "gt": 15,
+    "pred": 13,
+    "tp_05": 13,
+    "tp_09": 11
+   },
+   "grobid090+split": {
+    "gt": 15,
+    "pred": 13,
+    "tp_05": 13,
+    "tp_09": 11
+   }
+  },
+  {
+   "paper": "2306.02914v3",
+   "gt_pairs": 4,
+   "gt_dropped": 0,
+   "ours": {
+    "gt": 4,
+    "pred": 4,
+    "tp_05": 4,
+    "tp_09": 3
+   },
+   "grobid082": {
+    "gt": 4,
+    "pred": 4,
+    "tp_05": 4,
+    "tp_09": 3
+   },
+   "grobid090": {
+    "gt": 4,
+    "pred": 5,
+    "tp_05": 4,
+    "tp_09": 3
+   },
+   "grobid082+split": {
+    "gt": 4,
+    "pred": 4,
+    "tp_05": 4,
+    "tp_09": 3
+   },
+   "grobid090+split": {
+    "gt": 4,
+    "pred": 5,
+    "tp_05": 4,
+    "tp_09": 3
+   }
+  },
+  {
+   "paper": "2308.13052v1",
+   "gt_pairs": 11,
+   "gt_dropped": 0,
+   "ours": {
+    "gt": 11,
+    "pred": 11,
+    "tp_05": 10,
+    "tp_09": 10
+   },
+   "grobid082": {
+    "gt": 11,
+    "pred": 13,
+    "tp_05": 10,
+    "tp_09": 8
+   },
+   "grobid090": {
+    "gt": 11,
+    "pred": 16,
+    "tp_05": 10,
+    "tp_09": 8
+   },
+   "grobid082+split": {
+    "gt": 11,
+    "pred": 13,
+    "tp_05": 10,
+    "tp_09": 10
+   },
+   "grobid090+split": {
+    "gt": 11,
+    "pred": 16,
+    "tp_05": 11,
+    "tp_09": 10
+   }
+  },
+  {
+   "paper": "2309.04393v1",
+   "gt_pairs": 16,
+   "gt_dropped": 0,
+   "ours": {
+    "gt": 16,
+    "pred": 15,
+    "tp_05": 15,
+    "tp_09": 15
+   },
+   "grobid082": {
+    "gt": 16,
+    "pred": 21,
+    "tp_05": 15,
+    "tp_09": 13
+   },
+   "grobid090": {
+    "gt": 16,
+    "pred": 17,
+    "tp_05": 15,
+    "tp_09": 12
+   },
+   "grobid082+split": {
+    "gt": 16,
+    "pred": 21,
+    "tp_05": 16,
+    "tp_09": 15
+   },
+   "grobid090+split": {
+    "gt": 16,
+    "pred": 17,
+    "tp_05": 16,
+    "tp_09": 14
+   }
+  },
+  {
+   "paper": "2309.05739v1",
+   "gt_pairs": 31,
+   "gt_dropped": 0,
+   "ours": {
+    "gt": 31,
+    "pred": 31,
+    "tp_05": 30,
+    "tp_09": 7
+   },
+   "grobid082": {
+    "gt": 31,
+    "pred": 29,
+    "tp_05": 26,
+    "tp_09": 23
+   },
+   "grobid090": {
+    "gt": 31,
+    "pred": 30,
+    "tp_05": 28,
+    "tp_09": 25
+   },
+   "grobid082+split": {
+    "gt": 31,
+    "pred": 29,
+    "tp_05": 27,
+    "tp_09": 23
+   },
+   "grobid090+split": {
+    "gt": 31,
+    "pred": 30,
+    "tp_05": 29,
+    "tp_09": 25
+   }
+  },
+  {
+   "paper": "2312.04494v1",
+   "gt_pairs": 11,
+   "gt_dropped": 1,
+   "ours": {
+    "gt": 11,
+    "pred": 12,
+    "tp_05": 11,
+    "tp_09": 11
+   },
+   "grobid082": {
+    "gt": 11,
+    "pred": 16,
+    "tp_05": 10,
+    "tp_09": 8
+   },
+   "grobid090": {
+    "gt": 11,
+    "pred": 13,
+    "tp_05": 9,
+    "tp_09": 8
+   },
+   "grobid082+split": {
+    "gt": 11,
+    "pred": 16,
+    "tp_05": 10,
+    "tp_09": 9
+   },
+   "grobid090+split": {
+    "gt": 11,
+    "pred": 13,
+    "tp_05": 9,
+    "tp_09": 9
+   }
+  },
+  {
+   "paper": "2403.04757v1",
+   "gt_pairs": 21,
+   "gt_dropped": 0,
+   "ours": {
+    "gt": 21,
+    "pred": 21,
+    "tp_05": 21,
+    "tp_09": 19
+   },
+   "grobid082": {
+    "gt": 21,
+    "pred": 23,
+    "tp_05": 21,
+    "tp_09": 18
+   },
+   "grobid090": {
+    "gt": 21,
+    "pred": 20,
+    "tp_05": 20,
+    "tp_09": 18
+   },
+   "grobid082+split": {
+    "gt": 21,
+    "pred": 22,
+    "tp_05": 21,
+    "tp_09": 20
+   },
+   "grobid090+split": {
+    "gt": 21,
+    "pred": 20,
+    "tp_05": 20,
+    "tp_09": 19
+   }
+  },
+  {
+   "paper": "2410.19831v1",
+   "gt_pairs": 6,
+   "gt_dropped": 0,
+   "ours": {
+    "gt": 6,
+    "pred": 6,
+    "tp_05": 4,
+    "tp_09": 4
+   },
+   "grobid082": {
+    "gt": 6,
+    "pred": 8,
+    "tp_05": 5,
+    "tp_09": 2
+   },
+   "grobid090": {
+    "gt": 6,
+    "pred": 5,
+    "tp_05": 4,
+    "tp_09": 2
+   },
+   "grobid082+split": {
+    "gt": 6,
+    "pred": 8,
+    "tp_05": 5,
+    "tp_09": 4
+   },
+   "grobid090+split": {
+    "gt": 6,
+    "pred": 5,
+    "tp_05": 4,
+    "tp_09": 4
+   }
+  },
+  {
+   "paper": "2503.04110v2",
+   "gt_pairs": 22,
+   "gt_dropped": 1,
+   "ours": {
+    "gt": 22,
+    "pred": 23,
+    "tp_05": 21,
+    "tp_09": 17
+   },
+   "grobid082": {
+    "gt": 22,
+    "pred": 23,
+    "tp_05": 16,
+    "tp_09": 13
+   },
+   "grobid090": {
+    "gt": 22,
+    "pred": 22,
+    "tp_05": 20,
+    "tp_09": 16
+   },
+   "grobid082+split": {
+    "gt": 22,
+    "pred": 23,
+    "tp_05": 17,
+    "tp_09": 15
+   },
+   "grobid090+split": {
+    "gt": 22,
+    "pred": 22,
+    "tp_05": 21,
+    "tp_09": 18
+   }
+  },
+  {
+   "paper": "2506.17032v2",
+   "gt_pairs": 8,
+   "gt_dropped": 0,
+   "ours": {
+    "gt": 8,
+    "pred": 8,
+    "tp_05": 8,
+    "tp_09": 7
+   },
+   "grobid082": {
+    "gt": 8,
+    "pred": 8,
+    "tp_05": 8,
+    "tp_09": 7
+   },
+   "grobid090": {
+    "gt": 8,
+    "pred": 8,
+    "tp_05": 8,
+    "tp_09": 7
+   },
+   "grobid082+split": {
+    "gt": 8,
+    "pred": 8,
+    "tp_05": 8,
+    "tp_09": 7
+   },
+   "grobid090+split": {
+    "gt": 8,
+    "pred": 8,
+    "tp_05": 8,
+    "tp_09": 7
+   }
+  },
+  {
+   "paper": "2510.02651v1",
+   "gt_pairs": 3,
+   "gt_dropped": 0,
+   "ours": {
+    "gt": 3,
+    "pred": 3,
+    "tp_05": 3,
+    "tp_09": 3
+   },
+   "grobid082": {
+    "gt": 3,
+    "pred": 3,
+    "tp_05": 3,
+    "tp_09": 3
+   },
+   "grobid090": {
+    "gt": 3,
+    "pred": 3,
+    "tp_05": 3,
+    "tp_09": 3
+   },
+   "grobid082+split": {
+    "gt": 3,
+    "pred": 3,
+    "tp_05": 3,
+    "tp_09": 3
+   },
+   "grobid090+split": {
+    "gt": 3,
+    "pred": 3,
+    "tp_05": 3,
+    "tp_09": 3
+   }
+  },
+  {
+   "paper": "2603.16057v2",
+   "gt_pairs": 14,
+   "gt_dropped": 0,
+   "ours": {
+    "gt": 14,
+    "pred": 13,
+    "tp_05": 12,
+    "tp_09": 11
+   },
+   "grobid082": {
+    "gt": 14,
+    "pred": 13,
+    "tp_05": 11,
+    "tp_09": 9
+   },
+   "grobid090": {
+    "gt": 14,
+    "pred": 11,
+    "tp_05": 11,
+    "tp_09": 9
+   },
+   "grobid082+split": {
+    "gt": 14,
+    "pred": 13,
+    "tp_05": 11,
+    "tp_09": 10
+   },
+   "grobid090+split": {
+    "gt": 14,
+    "pred": 11,
+    "tp_05": 11,
+    "tp_09": 10
+   }
+  },
+  {
+   "paper": "2605.01456v2",
+   "gt_pairs": 16,
+   "gt_dropped": 0,
+   "ours": {
+    "gt": 16,
+    "pred": 14,
+    "tp_05": 12,
+    "tp_09": 7
+   },
+   "grobid082": {
+    "gt": 16,
+    "pred": 15,
+    "tp_05": 15,
+    "tp_09": 5
+   },
+   "grobid090": {
+    "gt": 16,
+    "pred": 16,
+    "tp_05": 15,
+    "tp_09": 5
+   },
+   "grobid082+split": {
+    "gt": 16,
+    "pred": 14,
+    "tp_05": 12,
+    "tp_09": 7
+   },
+   "grobid090+split": {
+    "gt": 16,
+    "pred": 15,
+    "tp_05": 12,
+    "tp_09": 7
+   }
+  },
+  {
+   "paper": "2606.20856v2",
+   "gt_pairs": 4,
+   "gt_dropped": 0,
+   "ours": {
+    "gt": 4,
+    "pred": 6,
+    "tp_05": 4,
+    "tp_09": 1
+   },
+   "grobid082": {
+    "gt": 4,
+    "pred": 6,
+    "tp_05": 4,
+    "tp_09": 1
+   },
+   "grobid090": {
+    "gt": 4,
+    "pred": 6,
+    "tp_05": 4,
+    "tp_09": 2
+   },
+   "grobid082+split": {
+    "gt": 4,
+    "pred": 6,
+    "tp_05": 4,
+    "tp_09": 1
+   },
+   "grobid090+split": {
+    "gt": 4,
+    "pred": 6,
+    "tp_05": 4,
+    "tp_09": 2
+   }
+  }
+ ]
+}

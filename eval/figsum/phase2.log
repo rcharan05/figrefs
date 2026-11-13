@@ -1,0 +1,82 @@
+E3 mix, thresh                   | 0.818 0.746 0.746 | 0.636 0.480 0.547  173 |          0/0/73 | +0.000 [+0.000, +0.000]
+E3 mix, any family               | 0.818 0.746 0.746 | 0.636 0.480 0.547  173 |          0/0/73 | +0.000 [+0.000, +0.000]
+E3 LR-far, topk                  | 0.818 0.746 0.746 | 0.636 0.480 0.547  173 |          0/0/73 | +0.000 [+0.000, +0.000]
+E3 LR-far, alpha                 | 0.784 0.753 0.734 | 0.600 0.485 0.536  185 |         1/12/73 | -0.012 [-0.028, -0.001]
+E3 LR-far, thresh                | 0.814 0.746 0.744 | 0.632 0.480 0.546  174 |          0/1/73 | -0.001 [-0.004, +0.000]
+E3 LR-far, any family            | 0.814 0.746 0.744 | 0.632 0.480 0.546  174 |          0/1/73 | -0.001 [-0.004, +0.000]
+E5 = [E1a-sp] + [E1b visual far, tf_ment] | 0.802 0.762 0.745 | 0.604 0.507 0.551  192 |          0/0/73 | -0.001 [-0.012, +0.012]
+
+== TEST (17 figures)
+system                           |     P     R    F1 |  impP  impR impF1  sel | far ok/sel/gold | F1 vs B0 [95%]
+B0 (adjacent, same paragraph)    | 0.699 0.800 0.727 | 0.544 0.614 0.577   79 |          0/0/16 | +0.000 [+0.000, +0.000]
+E1a-sp  visual, window, same para | 0.682 0.800 0.714 | 0.518 0.614 0.562   83 |          0/0/16 | -0.013 [-0.028, +0.000]
+E1a     visual, window           | 0.672 0.800 0.707 | 0.506 0.614 0.555   85 |          0/0/16 | -0.020 [-0.041, -0.004]
+E1a-LR  stacked LR d<=3 + visual | 0.653 0.823 0.710 | 0.505 0.671 0.577   93 |          0/0/16 | -0.017 [-0.063, +0.031]
+E2 anaph                         | 0.700 0.818 0.736 | 0.536 0.643 0.584   84 |          0/0/16 | +0.009 [-0.007, +0.031]
+E2 chain-any                     | 0.614 0.854 0.693 | 0.438 0.700 0.538  112 |          0/0/16 | -0.034 [-0.069, -0.001]
+E2 chain-ana                     | 0.668 0.811 0.714 | 0.506 0.629 0.561   87 |          0/0/16 | -0.013 [-0.032, +0.008]
+E2 anaph|chain-ana               | 0.673 0.830 0.726 | 0.511 0.657 0.575   90 |          0/0/16 | -0.001 [-0.025, +0.025]
+E2-LR  stacked LR d<=3 + visual + coref | 0.603 0.856 0.692 | 0.464 0.729 0.567  110 |          0/0/16 | -0.035 [-0.075, +0.007]
+E1b visual far, tf_ment          | 0.699 0.800 0.727 | 0.544 0.614 0.577   79 |          0/0/16 | +0.000 [+0.000, +0.000]
+E1b visual far, bge_ment         | 0.699 0.800 0.727 | 0.544 0.614 0.577   79 |          0/0/16 | +0.000 [+0.000, +0.000]
+E1b visual far, tf_cap           | 0.699 0.800 0.727 | 0.544 0.614 0.577   79 |          0/0/16 | +0.000 [+0.000, +0.000]
+E1b visual far, bge_cap          | 0.699 0.800 0.727 | 0.544 0.614 0.577   79 |          0/0/16 | +0.000 [+0.000, +0.000]
+E1b visual far, mix              | 0.699 0.800 0.727 | 0.544 0.614 0.577   79 |          0/0/16 | +0.000 [+0.000, +0.000]
+E3 tf_ment, topk                 | 0.699 0.800 0.727 | 0.544 0.614 0.577   79 |          0/0/16 | +0.000 [+0.000, +0.000]
+E3 tf_ment, alpha                | 0.677 0.800 0.713 | 0.518 0.614 0.562   83 |          0/4/16 | -0.014 [-0.028, -0.003]
+E3 tf_ment, thresh               | 0.699 0.800 0.727 | 0.544 0.614 0.577   79 |          0/0/16 | +0.000 [+0.000, +0.000]
+E3 tf_ment, any family           | 0.699 0.800 0.727 | 0.544 0.614 0.577   79 |          0/0/16 | +0.000 [+0.000, +0.000]
+E3 bge_ment, topk                | 0.699 0.800 0.727 | 0.544 0.614 0.577   79 |          0/0/16 | +0.000 [+0.000, +0.000]
+E3 bge_ment, alpha               | 0.680 0.800 0.715 | 0.518 0.614 0.562   83 |          0/4/16 | -0.012 [-0.025, -0.003]
+E3 bge_ment, thresh              | 0.699 0.800 0.727 | 0.544 0.614 0.577   79 |          0/0/16 | +0.000 [+0.000, +0.000]
+E3 bge_ment, any family          | 0.699 0.800 0.727 | 0.544 0.614 0.577   79 |          0/0/16 | +0.000 [+0.000, +0.000]
+E3 tf_cap, topk                  | 0.699 0.800 0.727 | 0.544 0.614 0.577   79 |          0/0/16 | +0.000 [+0.000, +0.000]
+E3 tf_cap, alpha                 | 0.668 0.800 0.710 | 0.518 0.614 0.562   83 |          0/4/16 | -0.017 [-0.033, -0.003]
+E3 tf_cap, thresh                | 0.699 0.800 0.727 | 0.544 0.614 0.577   79 |          0/0/16 | +0.000 [+0.000, +0.000]
+E3 tf_cap, any family            | 0.699 0.800 0.727 | 0.544 0.614 0.577   79 |          0/0/16 | +0.000 [+0.000, +0.000]
+E3 bge_cap, topk                 | 0.699 0.800 0.727 | 0.544 0.614 0.577   79 |          0/0/16 | +0.000 [+0.000, +0.000]
+E3 bge_cap, alpha                | 0.674 0.800 0.716 | 0.518 0.614 0.562   83 |          0/4/16 | -0.011 [-0.022, -0.003]
+E3 bge_cap, thresh               | 0.699 0.800 0.727 | 0.544 0.614 0.577   79 |          0/0/16 | +0.000 [+0.000, +0.000]
+E3 bge_cap, any family           | 0.699 0.800 0.727 | 0.544 0.614 0.577   79 |          0/0/16 | +0.000 [+0.000, +0.000]
+E3 mix, topk                     | 0.699 0.800 0.727 | 0.544 0.614 0.577   79 |          0/0/16 | +0.000 [+0.000, +0.000]
+E3 mix, alpha                    | 0.677 0.800 0.713 | 0.518 0.614 0.562   83 |          0/4/16 | -0.014 [-0.028, -0.003]
+E3 mix, thresh                   | 0.699 0.800 0.727 | 0.544 0.614 0.577   79 |          0/0/16 | +0.000 [+0.000, +0.000]
+E3 mix, any family               | 0.699 0.800 0.727 | 0.544 0.614 0.577   79 |          0/0/16 | +0.000 [+0.000, +0.000]
+E3 LR-far, topk                  | 0.699 0.800 0.727 | 0.544 0.614 0.577   79 |          0/0/16 | +0.000 [+0.000, +0.000]
+E3 LR-far, alpha                 | 0.665 0.800 0.713 | 0.518 0.614 0.562   83 |          0/4/16 | -0.014 [-0.030, -0.003]
+E3 LR-far, thresh                | 0.699 0.800 0.727 | 0.544 0.614 0.577   79 |          0/0/16 | +0.000 [+0.000, +0.000]
+E3 LR-far, any family            | 0.699 0.800 0.727 | 0.544 0.614 0.577   79 |          0/0/16 | +0.000 [+0.000, +0.000]
+E5 = [E1a-sp] + [E1b visual far, tf_ment] | 0.682 0.800 0.714 | 0.518 0.614 0.562   83 |          0/0/16 | -0.013 [-0.028, +0.000]
+
+-- far-selection parameters chosen per dev fold / on all dev (test):
+   E1b visual far, tf_ment          folds [('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0)] | test {'far': ('topk', 0)}
+   E1b visual far, bge_ment         folds [('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('thresh', 0.7981793159246445), ('topk', 0), ('topk', 0), ('topk', 0)] | test {'far': ('topk', 0)}
+   E1b visual far, tf_cap           folds [('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0)] | test {'far': ('topk', 0)}
+   E1b visual far, bge_cap          folds [('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0)] | test {'far': ('topk', 0)}
+   E1b visual far, mix              folds [('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0)] | test {'far': ('topk', 0)}
+   E3 tf_ment, topk                 folds [('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0)] | test {'far': ('topk', 0)}
+   E3 tf_ment, alpha                folds [('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25)] | test {'far': ('alpha', 0.25)}
+   E3 tf_ment, thresh               folds [('thresh', inf), ('thresh', inf), ('thresh', inf), ('thresh', inf), ('thresh', inf), ('thresh', inf), ('thresh', inf), ('thresh', inf), ('thresh', inf)] | test {'far': ('thresh', inf)}
+   E3 tf_ment, any family           folds [('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0)] | test {'far': ('topk', 0)}
+   E3 bge_ment, topk                folds [('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0)] | test {'far': ('topk', 0)}
+   E3 bge_ment, alpha               folds [('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25)] | test {'far': ('alpha', 0.25)}
+   E3 bge_ment, thresh              folds [('thresh', inf), ('thresh', inf), ('thresh', inf), ('thresh', inf), ('thresh', inf), ('thresh', inf), ('thresh', inf), ('thresh', inf), ('thresh', inf)] | test {'far': ('thresh', inf)}
+   E3 bge_ment, any family          folds [('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0)] | test {'far': ('topk', 0)}
+   E3 tf_cap, topk                  folds [('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0)] | test {'far': ('topk', 0)}
+   E3 tf_cap, alpha                 folds [('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25)] | test {'far': ('alpha', 0.25)}
+   E3 tf_cap, thresh                folds [('thresh', inf), ('thresh', inf), ('thresh', inf), ('thresh', inf), ('thresh', inf), ('thresh', inf), ('thresh', inf), ('thresh', inf), ('thresh', inf)] | test {'far': ('thresh', inf)}
+   E3 tf_cap, any family            folds [('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0)] | test {'far': ('topk', 0)}
+   E3 bge_cap, topk                 folds [('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0)] | test {'far': ('topk', 0)}
+   E3 bge_cap, alpha                folds [('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25)] | test {'far': ('alpha', 0.25)}
+   E3 bge_cap, thresh               folds [('thresh', inf), ('thresh', inf), ('thresh', inf), ('thresh', inf), ('thresh', inf), ('thresh', inf), ('thresh', inf), ('thresh', inf), ('thresh', inf)] | test {'far': ('thresh', inf)}
+   E3 bge_cap, any family           folds [('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0)] | test {'far': ('topk', 0)}
+   E3 mix, topk                     folds [('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0)] | test {'far': ('topk', 0)}
+   E3 mix, alpha                    folds [('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25)] | test {'far': ('alpha', 0.25)}
+   E3 mix, thresh                   folds [('thresh', inf), ('thresh', inf), ('thresh', inf), ('thresh', inf), ('thresh', inf), ('thresh', inf), ('thresh', inf), ('thresh', inf), ('thresh', inf)] | test {'far': ('thresh', inf)}
+   E3 mix, any family               folds [('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0)] | test {'far': ('topk', 0)}
+   E3 LR-far, topk                  folds [('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0)] | test {'far': ('topk', 0)}
+   E3 LR-far, alpha                 folds [('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25), ('alpha', 0.25)] | test {'far': ('alpha', 0.25)}
+   E3 LR-far, thresh                folds [('thresh', 0.9996535884725645), ('thresh', inf), ('thresh', inf), ('thresh', inf), ('thresh', inf), ('thresh', inf), ('thresh', inf), ('thresh', 0.9991472547244453), ('thresh', 0.9992045812820962)] | test {'far': ('thresh', inf)}
+   E3 LR-far, any family            folds [('thresh', 0.9996535884725645), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('topk', 0), ('thresh', 0.9991472547244453), ('thresh', 0.9992045812820962)] | test {'far': ('topk', 0)}
+
+[exited with code 0]

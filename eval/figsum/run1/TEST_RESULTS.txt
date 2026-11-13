@@ -1,0 +1,5 @@
+SEALED TEST: 3 papers ['17483019', '19673075', '23041342'], 18 figures
+B0f (rule)                         P 0.814 R 0.570 F1 0.622   | cites 32/34/32  window 24/37/46  far 0/0/30
+PRIMARY ens SPAN+C0L +E anchored (t=-3.6; OOF F1 0.776) P 0.791 R 0.680 F1 0.694  vs B0f +0.071 [+0.006, +0.144]   | cites 32/34/32  window 35/54/46  far 3/3/30
+C0L+E raw (t=2.3; OOF F1 0.763)    P 0.827 R 0.586 F1 0.639  vs B0f +0.017 [-0.003, +0.043]   | cites 32/34/32  window 24/36/46  far 0/0/30
+SPAN+E raw (t=1.0; OOF F1 0.753)   P 0.671 R 0.728 F1 0.668  vs B0f +0.045 [-0.032, +0.127]   | cites 32/34/32  window 40/77/46  far 3/5/30

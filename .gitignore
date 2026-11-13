@@ -1,0 +1,28 @@
+__pycache__/
+*.pyc
+.venv/
+.DS_Store
+out/
+live_*/
+models/
+demo_out/
+data/*.pdf
+# full text of papers (licensed or copyrighted): never commit
+demo/viewer_data.json
+cs_articles.jsonl
+label_pack/
+labels/
+run1_data.jsonl
+articles.jsonl
+*.safetensors
+*.bin
+*.pt
+# LaTeX build files
+report/*.aux
+report/*.bbl
+report/*.blg
+report/*.log
+report/*.out
+report/*.toc
+report/*.fls
+report/*.fdb_latexmk

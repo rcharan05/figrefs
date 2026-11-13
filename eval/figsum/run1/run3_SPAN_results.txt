@@ -1,0 +1,11 @@
+training pool: 15 papers, 73 figures; selections shown as correct/selected/gold
+B0f (rule)                         P 0.868 R 0.718 F1 0.752   | cites 206/219/206  window 156/212/231  far 0/0/112
+C0L [z]                            P 0.692 R 0.769 F1 0.692  vs B0f -0.060 [-0.106, -0.013]   | cites 197/209/206  window 183/324/231  far 7/35/112   t=[1.7, 2.5]
+C0L+E [z]                          P 0.845 R 0.692 F1 0.725  vs B0f -0.027 [-0.053, -0.002]   | cites 206/219/206  window 135/194/231  far 0/3/112   t=[2.9, 3.05, 3.3, 3.7]
+C0L+E [raw]                        P 0.871 R 0.709 F1 0.752  vs B0f -0.000 [-0.019, +0.020]   | cites 206/219/206  window 148/203/231  far 0/0/112   t=[2.3, 2.4, 2.8]
+                                   AUC window 0.848  far 0.653  all 0.911
+SPAN [z]                           P 0.721 R 0.727 F1 0.686  vs B0f -0.066 [-0.114, -0.021]   | cites 192/204/206  window 171/264/231  far 4/29/112   t=[2.05, 2.25, 2.45, 2.55]
+SPAN+E [z]                         P 0.834 R 0.736 F1 0.735  vs B0f -0.017 [-0.045, +0.010]   | cites 206/219/206  window 159/235/231  far 4/10/112   t=[2.45, 2.55]
+SPAN+E [raw]                       P 0.817 R 0.763 F1 0.747  vs B0f -0.005 [-0.029, +0.020]   | cites 206/219/206  window 183/290/231  far 2/4/112   t=[0.7, 0.9, 1.0]
+                                   AUC window 0.872  far 0.701  all 0.928
+ens SPAN+C0L raw mean, +E, anchored to mean score of F's citing sentences: F1 0.766 P 0.836 R 0.765 vs B0f +0.014 [-0.009,+0.039]; C0L anchored 0.756; SPAN anchored 0.744

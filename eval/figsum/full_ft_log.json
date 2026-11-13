@@ -1,0 +1,93 @@
+[
+ {
+  "init": "base",
+  "held_out": "1064895",
+  "seed": 1,
+  "last_loss": 0.3590714931488037,
+  "minutes": 4.5
+ },
+ {
+  "init": "base",
+  "held_out": "1065313",
+  "seed": 1,
+  "last_loss": 0.12159363180398941,
+  "minutes": 9.2
+ },
+ {
+  "init": "base",
+  "held_out": "1080127",
+  "seed": 1,
+  "last_loss": 0.017640305683016777,
+  "minutes": 13.8
+ },
+ {
+  "init": "base",
+  "held_out": "1087843",
+  "seed": 1,
+  "last_loss": 0.5680446624755859,
+  "minutes": 18.5
+ },
+ {
+  "init": "base",
+  "held_out": "111020",
+  "seed": 1,
+  "last_loss": 0.20665243268013,
+  "minutes": 23.3
+ },
+ {
+  "init": "base",
+  "held_out": "1134656",
+  "seed": 1,
+  "last_loss": 0.06592180579900742,
+  "minutes": 27.5
+ },
+ {
+  "init": "base",
+  "held_out": "1156890",
+  "seed": 1,
+  "last_loss": 0.04343109950423241,
+  "minutes": 32.0
+ },
+ {
+  "init": "base",
+  "held_out": "115840",
+  "seed": 1,
+  "last_loss": 0.026350080966949463,
+  "minutes": 36.7
+ },
+ {
+  "init": "base",
+  "held_out": "1159166",
+  "seed": 1,
+  "last_loss": 0.03962148353457451,
+  "minutes": 41.3
+ },
+ {
+  "init": "base",
+  "held_out": "20459090",
+  "seed": 1,
+  "last_loss": 0.02049112319946289,
+  "minutes": 46.2
+ },
+ {
+  "init": "base",
+  "held_out": "2542994",
+  "seed": 1,
+  "last_loss": 0.027369260787963867,
+  "minutes": 50.9
+ },
+ {
+  "init": "base",
+  "held_out": "2569962",
+  "seed": 1,
+  "last_loss": 0.02063298225402832,
+  "minutes": 55.5
+ },
+ {
+  "init": "base",
+  "held_out": "2891020",
+  "seed": 1,
+  "last_loss": 0.32644447684288025,
+  "minutes": 60.3
+ }
+]

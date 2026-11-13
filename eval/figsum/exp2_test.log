@@ -1,0 +1,15 @@
+== TEST (4 articles, 17 figures); fitted on all dev
+FigSum+ SurfaceCue [published system]      meanF1 0.576 | implicit P 0.000 R 0.000 F1 0.000 (sel 0)
+FigSum+ Paragraph [published system]       meanF1 0.591 | implicit P 0.290 R 0.829 F1 0.430 (sel 200)
+FigSum+ Hybrid [published system]          meanF1 0.618 | implicit P 0.344 R 0.471 F1 0.398 (sel 96)
+FigSum+ TFIDF [published system]           meanF1 0.433 | implicit P 0.106 R 0.171 F1 0.131 (sel 113)
+Adjacent sentence only (d=1)               meanF1 0.706 | implicit P 0.489 R 0.629 F1 0.550 (sel 90) {}
+Paragraph rule                             meanF1 0.591 | implicit P 0.290 R 0.829 F1 0.430 (sel 200) {}
+Hand-set: old score, no penalties          meanF1 0.556 | implicit P 0.227 R 0.071 F1 0.109 (sel 22) {'tau': 1000, 'dmax': 999, 'lam': 0, 't': 0.95}
+Hand-set: + distance + topic penalties     meanF1 0.706 | implicit P 0.489 R 0.629 F1 0.550 (sel 90) {'tau': 0.5, 'dmax': 1, 'lam': 0, 't': 0.05}
+LR all (no window)                         meanF1 0.674 | implicit P 0.397 R 0.800 F1 0.531 (sel 141) {'t': 0.95}
+LR all, window d<=3                        meanF1 0.690 | implicit P 0.459 R 0.729 F1 0.564 (sel 111) {'t': 0.35}
+GBM all                                    meanF1 0.687 | implicit P 0.489 R 0.643 F1 0.556 (sel 92) {'t': 0.925}
+LR all + figure feats, d<=3                meanF1 0.685 | implicit P 0.440 R 0.729 F1 0.548 (sel 116) {'t': 0.325}
+Stacked LR (neighbour context)             meanF1 0.639 | implicit P 0.350 R 0.786 F1 0.485 (sel 157) {'t': 0.925}
+Stacked LR (neighbour context), d<=3       meanF1 0.710 | implicit P 0.505 R 0.671 F1 0.577 (sel 93) {'t': 0.575}

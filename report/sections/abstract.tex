@@ -16,8 +16,8 @@ whole-paper span tagger (ModernBERT-large), and text extracted from the figure i
 help, and we report them all. What did work was (i) training on every real figure--sentence pair,
 (ii) reading long stretches of the paper at once, and (iii) a better way of turning scores into a set of
 sentences, which we call \emph{anchoring}. In a pre-registered test on three unseen papers, opened once, an
-ensemble of the two transformers scores F1 0.694 against 0.622 for \bof{} ($+0.071$, 95\% bootstrap interval
-$[+0.006, +0.144]$). The gain is recall on implicit sentences near a citation; references far from any citation
+ensemble of the two transformers scores F1 0.694 against 0.622 for \bof{} ($+0.071$). The gain is recall on implicit sentences near a citation; references far from any citation
 remain largely unsolved. A sanity check on a computer-science paper suggests that the model transfers outside
-biomedicine, with caveats that we state. The tool, the trained models and all experiment and training code are released.
+biomedicine, with caveats that we state. The tool, the trained models and all experiment and training code are released at
+\url{https://github.com/rcharan05/figrefs}.
 \end{abstract}

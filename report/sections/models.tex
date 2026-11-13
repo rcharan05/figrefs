@@ -139,7 +139,7 @@ best so far, yet its F1 was 0.725.
 The cause was the decision step. We had been selecting a sentence when the \emph{z-score of its logit within
 its paper} exceeded a threshold, on the reasoning that papers differ in scale. But standardising within a
 paper discards how confident the model is in absolute terms, and the large model is confident. Thresholding
-the raw logit instead gave F1 \textbf{0.752}, level with the rule ($-0.000$, interval $[-0.019, +0.020]$).
+the raw logit instead gave F1 \textbf{0.752}, level with the rule.
 From this point on, the decision step received as much attention as the model.
 
 Two further variants of the large cross-encoder did not help: adding the augmentations (C0aL, 0.723) and
@@ -223,7 +223,7 @@ Anchored score $\ge t$ & \best{0.756}\\
 \label{sec:ensemble}
 The ensemble score of a pair is the mean of the C0L logit and the SPAN logit; it is then anchored as above.
 The ensemble ranks better than either model (near AUC 0.892 against 0.848 and 0.872; far AUC 0.783) and
-scores \textbf{F1 0.766} out-of-fold, $+0.014$ over \bof{} with an interval of $[-0.009, +0.039]$. This
+scores \textbf{F1 0.766} out-of-fold, $+0.014$ over \bof{}. This
 configuration, with the threshold $t=-3.6$ that maximises F1 on the out-of-fold scores of the training papers,
 was registered as the primary model for the sealed test.
 

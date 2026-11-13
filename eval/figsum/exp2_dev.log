@@ -1,0 +1,31 @@
+== DEV round 2, nested LOAO over 9 articles
+Adjacent sentence only (d=1)               meanF1 0.726 | implicit P 0.571 R 0.511 F1 0.539 (sel 205)
+Hand-set: + distance + topic penalties     meanF1 0.710 | implicit P 0.572 R 0.467 F1 0.514 (sel 187)
+LR all, window d<=3                        meanF1 0.733 | implicit P 0.557 R 0.559 F1 0.558 (sel 230)
+GBM all                                    meanF1 0.738 | implicit P 0.597 R 0.498 F1 0.543 (sel 191)
+LR all + figure feats                      meanF1 0.728 | implicit P 0.548 R 0.546 F1 0.547 (sel 228)
+LR all + figure feats, d<=2                meanF1 0.719 | implicit P 0.568 R 0.493 F1 0.528 (sel 199)
+LR all + figure feats, d<=3                meanF1 0.734 | implicit P 0.580 R 0.537 F1 0.558 (sel 212)
+LR all + figure feats, d<=3 same section   meanF1 0.732 | implicit P 0.566 R 0.546 F1 0.556 (sel 221)
+LR all + figure feats, d<=5                meanF1 0.734 | implicit P 0.641 R 0.476 F1 0.546 (sel 170)
+GBM all + figure feats, d<=3               meanF1 0.731 | implicit P 0.613 R 0.463 F1 0.527 (sel 173)
+Stacked LR (neighbour context)             meanF1 0.745 | implicit P 0.583 R 0.507 F1 0.542 (sel 199)
+Stacked LR (neighbour context), d<=3       meanF1 0.740 | implicit P 0.605 R 0.502 F1 0.549 (sel 190)
+Top-k per figure (LR all + figure feats)   meanF1 0.708 | implicit P 0.651 R 0.301 F1 0.412 (sel 106)
+Top-k per figure, d<=3                     meanF1 0.722 | implicit P 0.688 R 0.328 F1 0.444 (sel 109)
+
+-- paired bootstrap over figures: mean F1 difference vs adjacent rule [95% interval]
+   Adjacent sentence only (d=1)                 +0.000  [+0.000, +0.000]
+   Hand-set: + distance + topic penalties       -0.016  [-0.034, -0.000]
+   LR all, window d<=3                          +0.007  [-0.025, +0.040]
+   GBM all                                      +0.012  [-0.023, +0.045]
+   LR all + figure feats                        +0.002  [-0.032, +0.036]
+   LR all + figure feats, d<=2                  -0.007  [-0.039, +0.025]
+   LR all + figure feats, d<=3                  +0.008  [-0.026, +0.042]
+   LR all + figure feats, d<=3 same section     +0.006  [-0.028, +0.040]
+   LR all + figure feats, d<=5                  +0.008  [-0.027, +0.041]
+   GBM all + figure feats, d<=3                 +0.004  [-0.030, +0.038]
+   Stacked LR (neighbour context)               +0.019  [-0.021, +0.057]
+   Stacked LR (neighbour context), d<=3         +0.014  [-0.020, +0.047]
+   Top-k per figure (LR all + figure feats)     -0.018  [-0.060, +0.023]
+   Top-k per figure, d<=3                       -0.004  [-0.037, +0.030]

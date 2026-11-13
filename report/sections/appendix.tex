@@ -37,8 +37,8 @@ This appendix describes the approaches summarised in Table~\ref{tab:other} (Sect
         similar back to a citing sentence. Slightly worse than the rule.
   \item[Small language models as judges] Local models of 1.5 to 3 billion parameters were asked whether a
         sentence is about a given figure. Their ranking of near sentences reached an AUC of at most 0.708.
-        Letting such a judge extend \bof{} to distance 2--3 gave $+0.014$ on development papers but was not
-        significant on the held-out papers of that protocol.
+        Letting such a judge extend \bof{} to distance 2--3 gave $+0.014$ on development papers but gave no
+        clear gain on the held-out papers of that protocol.
   \item[``Figure-talk'' classifier] A classifier trained, without any \figsum{} labels, to recognise prose that
         describes a figure: on 200 bioRxiv papers, a sentence is positive if it cites a figure, and the
         citation is masked out. On \figsum{} it ranked near sentences \emph{worse than chance} (AUC 0.46), and

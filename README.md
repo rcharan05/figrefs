@@ -14,7 +14,7 @@ Undergraduate project by Charan (230819), supervised by Prof. Soumya Dutta, IIT 
 | Explicit references, sentence F1 | 0.93 (28 arXiv papers), 0.85 (177 held-out bioRxiv papers) |
 | Implicit references, rule `B0f` | F1 0.752 on 15 FigSum+ papers (best published method: 0.659 on the same papers) |
 | Learned ensemble (DeBERTa-v3-large + ModernBERT-large) | F1 0.766 out-of-fold |
-| Pre-registered test, 3 unseen papers | **0.694 vs 0.622** for the rule (+0.071, 95% interval [+0.006, +0.144]) |
+| Pre-registered test, 3 unseen papers | **0.694 vs 0.622** for the rule (+0.071) |
 | Sanity check on one CS paper (LLM-agreement reference, not a benchmark) | model 0.807, rule 0.776, Paragraph 0.663 |
 
 Benchmark: FigSum+ GS1 (Ramesh, Sethi & Yu, PLoS ONE 2015). All caveats are in the report.

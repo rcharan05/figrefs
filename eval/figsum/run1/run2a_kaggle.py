@@ -1,0 +1,538 @@
+"""Run 2a: fixed stage 1 + stage 2 in the C0 input layout (follow-up to run 1; same data, folds and seeds).
+
+ONE command, every visible GPU (Kaggle 2xT4):     python run2a_kaggle.py launch
+Input: run1_data.jsonl (unchanged from run 1). Output: /kaggle/working/run2a (R1_OUT).
+
+Run-1 findings this addresses: S1 did not train (loss ~2.2 flat, window AUC 0.52 = chance; pos_weight ~20 from
+keeping every negative); stage-2 input (4 citing sentences AFTER the candidate + heavy dropout/noise) ranked window
+sentences worse than C0 (AUC 0.77 vs 0.82); A3 helped (+0.038 F1).
+Configs:
+  S1b    stage 1 fixed: (caption, masked sentence) as S1, but per figure and per epoch keep all positives and
+         a fresh random sample of at most 4x as many negatives (pos_weight ~4), lr 1e-5. Each fold job logs
+         its held-out window AUC (`s1_window_auc`; > 0.6 means it learned something). max_len 256.
+  S2b_f  stage 2 (implicit given explicit) in C0's layout: (caption, "[tag] Citing: <nearest sentence of E>
+         Candidate: <s>") for every sentence not in E (F's citing sentences, which go straight to the output).
+         Starts from the S1b model of the same fold and seed. Augmentations: A3 citation-deleted copies of F's
+         citing sentences (gold label kept); paraphrase swap p=0.3; light tag / context dropout p=0.1 each;
+         light detector noise (E sentence dropped p=0.05 -> becomes a gold-labelled candidate; p=0.02 a random
+         non-gold same-paragraph sentence added to E); far negatives kept p=0.3. lr 2e-5, max_len 320.
+  S2b_s  S2b_f from plain DeBERTa (isolates what S1b adds). Compare both with run 1's C0+E (F1 .728).
+  C0a    run 1's C0 (best so far) + A3 citation-deleted positives (tagged as non-citing, nearest OTHER citation
+         as context) + paraphrase swap p=0.3. Everything else identical to C0.
+  C0L    run 1's C0 with microsoft/deberta-v3-large (435M): lr 1e-5, micro-batch 8 x 2 accumulation (= 16).
+Protocol as run 1: 5-fold rotation x seeds 1,2,3 -> oof/<cfg>.json; final model per config on all 15 papers
+(S2b_f-final from S1b-final) saved to models/<cfg>/ and scored on the 3 sealed test papers (test_SEALED/).
+Download run2a_scores.zip. Resumable: re-running launch skips finished jobs.
+Env: R1_SEEDS R1_CONFIGS R1_EPOCHS R1_BASE R1_OUT; R1_SMOKE=1 = quick check (2 folds, 1 seed, 1 epoch, 40 sentences).
+"""
+from __future__ import annotations
+
+import glob
+import json
+import math
+import os
+import random
+import re
+import shutil
+import subprocess
+import sys
+import time
+
+import numpy as np
+
+OUT = os.environ.get("R1_OUT", "/kaggle/working/run2a")
+TMP = os.environ.get("R1_TMP", os.path.join(OUT, "_ckpt"))    # stage-1 fold checkpoints (deleted once used)
+SMOKE = os.environ.get("R1_SMOKE") == "1"
+SEEDS = [int(s) for s in os.environ.get("R1_SEEDS", "1" if SMOKE else "1,2,3").split(",")]
+CONFIGS = os.environ.get("R1_CONFIGS", "S1b,S2b_f,S2b_s,C0a,C0L").split(",")
+EPOCHS = int(os.environ.get("R1_EPOCHS", 1 if SMOKE else 3))
+BASE = os.environ.get("R1_BASE", "microsoft/deberta-v3-base")
+LR, WD, BATCH, WARM = 2e-5, 0.01, 16, 0.1
+MAXLEN = {"C0": 320, "S1": 256, "S2": 384, "S1b": 256, "S2b": 320}
+LR_STAGE = {"S1b": 1e-5}                       # everything else LR
+LR_CFG = {"C0L": 1e-5}
+BASE_CFG = {"C0L": "microsoft/deberta-v3-large"} if not SMOKE else {}
+MICRO = {"C0L": 8}                              # micro-batch; gradients accumulated up to BATCH
+S1B_NEG = 4                                     # stage-1 negatives per positive, resampled every epoch
+P2B = {"tag": 0.1, "ctx": 0.1, "edrop": 0.05, "eadd": 0.02}
+NFOLD = 2 if SMOKE else 5
+STAGE = {"C0": "C0", "S1": "S1", "S2s": "S2", "S2f": "S2", "S2f_noA3": "S2", "S1b": "S1b", "S2b_f": "S2b", "S2b_s": "S2b",
+         "C0a": "C0", "C0L": "C0"}
+INIT = {"S2f": "S1", "S2f_noA3": "S1", "S2b_f": "S1b"}           # config -> config whose same-fold/seed model it starts from
+P_SWAP, P_TAGDROP, P_CTXDROP, P_EDROP, P_EADD = 0.3, 0.3, 0.3, 0.12, 0.05
+FAR_KEEP = {"C0": 0.2, "S1": 1.0, "S2": 0.3, "S2b": 0.3}
+TAB = re.compile(r"\btables?\b", re.I)
+SUP = re.compile(r"supplement|additional file|figure s\d|fig\.? ?s\d|data not shown|not shown", re.I)
+CAPPFX = re.compile(r"^\s*(?:Fig(?:ure)?\.?|FIG\.?)\s*\d+\s*[.:|]?\s*", re.I)
+VERSION = "run2a-v1"
+
+
+# ------------------------------------------------------------------ data
+def find(name):
+    d = os.environ.get("R1_DATA", "")
+    if d and os.path.exists(os.path.join(d, name)):
+        return os.path.join(d, name)
+    hits = glob.glob(f"/kaggle/input/**/{name}", recursive=True)
+    if hits:
+        return hits[0]
+    if os.path.exists(name):
+        return name
+    raise SystemExit(f"cannot find {name} (attach the dataset or set R1_DATA)")
+
+
+def load_articles():
+    arts = [json.loads(l) for l in open(find("run1_data.jsonl"))]
+    for a in arts:
+        a["cue"] = [set(c) for c in a["cue"]]
+        a["gold"] = {int(f): set(v) for f, v in a["gold"].items()}
+        a["captions"] = {int(k): CAPPFX.sub("", v).strip()[:700] for k, v in a["captions"].items()}   # as phase 7
+        if SMOKE:
+            n = min(40, len(a["sentences"]))
+            for k in ("sentences", "masked", "sent_para", "cue"):
+                a[k] = a[k][:n]
+            a["gold"] = {f: {i for i in g if i < n} for f, g in a["gold"].items()}
+            a["figs"] = [f for f in a["figs"] if a["gold"][f] and any(f in c for c in a["cue"])][:2]
+    return {a["id"]: a for a in arts}
+
+
+def _others(a, i, f):
+    c = [f"Figure {g}" for g in sorted(a["cue"][i]) if g != f]
+    s = a["sentences"][i]
+    if TAB.search(s):
+        c.append("table")
+    if SUP.search(s):
+        c.append("supplementary/not shown")
+    return ", ".join(c) if c else "none"
+
+
+def _sec(a, i):
+    return (a["para_section"][a["sent_para"][i]] or "")[:40]
+
+
+def _pos(a, i, E):
+    """(position text, nearest index of E or None, distance)."""
+    if not E:
+        return "no citation of this figure in the paper", None, 10 ** 6
+    m = min(E, key=lambda j: (abs(j - i), j))
+    d = abs(i - m)
+    return f"{d} sentence{'s' if d > 1 else ''} {'after' if i > m else 'before'} a citation of this figure", m, d
+
+
+def examples(a, f, cfg, rng=None):
+    """List of (text_a, text_b, label, key). rng=None -> evaluation (deterministic, no augmentation)."""
+    st, train = STAGE[cfg], rng is not None
+    S, gold, cap = a["sentences"], a["gold"].get(f, set()), a["captions"].get(f, "")
+    n = len(S)
+    cit = [i for i in range(n) if f in a["cue"][i]]
+    out = []
+    key = lambda i: f"{a['id']}|{f}|{i}"
+    swap = lambda i, txt, masked: ((a["bt_masked"] if masked else a["bt"]).get(str(i), txt)
+                                   if train and rng.random() < P_SWAP else txt)
+    if st == "S1b":
+        pos = [i for i in range(n) if i in gold]
+        neg = [i for i in range(n) if i not in gold]
+        if train:
+            neg = rng.sample(neg, min(len(neg), S1B_NEG * max(1, len(pos))))
+        for i in pos + neg:
+            out.append((cap, swap(i, a["masked"][i], True), int(i in gold), key(i)))
+        return out
+    if st == "S2b":
+        E = set(cit)
+        if train:
+            E = {c for c in cit if rng.random() >= P2B["edrop"]}
+            if rng.random() < P2B["eadd"]:
+                paras = {a["sent_para"][c] for c in cit}
+                pool = [j for j in range(n) if a["sent_para"][j] in paras and j not in gold and j not in E]
+                if pool:
+                    E.add(rng.choice(pool))
+
+        def b2(i, cand, Ex):
+            pos_txt, m, d = _pos(a, i, Ex)
+            par = "same" if (m is not None and a["sent_para"][i] == a["sent_para"][m]) else "other"
+            tag = (f"[cites this figure: no | {pos_txt} | {par} paragraph | "   # candidates are never in E (detector view)
+                   f"section: {_sec(a, i)} | cites: {_others(a, i, f)}]")
+            ctx = S[m] if m is not None else "(none)"
+            if train and rng.random() < P2B["tag"]:
+                tag = "[position unknown]"
+            if train and rng.random() < P2B["ctx"]:
+                ctx = "(none)"
+            return f"{tag} Citing: {ctx} Candidate: {cand}", d
+
+        for i in range(n):
+            if i in E:
+                continue
+            y = int(i in gold)
+            txt, d = b2(i, swap(i, S[i], False), E)
+            if train and d > 3 and y == 0 and rng.random() > FAR_KEEP["S2b"]:
+                continue
+            out.append((cap, txt, y, key(i)))
+        if train:
+            for c in cit:
+                t = a["cdel"].get(f"{c}|{f}")
+                if t:
+                    tag_txt, _ = b2(c, t, E - {c})
+                    out.append((cap, tag_txt, int(c in gold), key(c) + "|A3"))
+        return out
+    if st == "C0":
+        for i in range(n):
+            y = int(i in gold)
+            cites = f in a["cue"][i]
+            pos, m, d = _pos(a, i, cit)
+            if train and not cites and d > 3 and y == 0 and rng.random() > FAR_KEEP["C0"]:
+                continue
+            pos_txt = "this is a citation" if cites else pos
+            par = "same" if (m is not None and a["sent_para"][i] == a["sent_para"][m]) else "other"
+            tag = (f"[cites this figure: {'yes' if cites else 'no'} | {pos_txt} | {par} paragraph | "
+                   f"section: {_sec(a, i)} | cites: {_others(a, i, f)}]")
+            ctx = "(this sentence)" if cites else (S[m] if m is not None else "(none)")
+            cand = swap(i, S[i], False) if cfg == "C0a" else S[i]
+            out.append((cap, f"{tag} Citing: {ctx} Candidate: {cand}", y, key(i)))
+        if train and cfg == "C0a":
+            for c in cit:
+                t = a["cdel"].get(f"{c}|{f}")
+                if not t:
+                    continue
+                pos, m, _ = _pos(a, c, [j for j in cit if j != c])
+                par = "same" if (m is not None and a["sent_para"][c] == a["sent_para"][m]) else "other"
+                tag = (f"[cites this figure: no | {pos} | {par} paragraph | section: {_sec(a, c)} | "
+                       f"cites: {_others(a, c, f)}]")
+                ctx = S[m] if m is not None else "(none)"
+                out.append((cap, f"{tag} Citing: {ctx} Candidate: {t}", int(c in gold), key(c) + "|A3"))
+        return out
+    if st == "S1":
+        for i in range(n):
+            out.append((cap, swap(i, a["masked"][i], True), int(i in gold), key(i)))
+        return out
+    # ---- stage 2: implicit given explicit
+    E = set(cit)
+    if train:
+        E = {c for c in cit if rng.random() >= P_EDROP}
+        if rng.random() < P_EADD:
+            paras = {a["sent_para"][c] for c in cit}
+            pool = [j for j in range(n) if a["sent_para"][j] in paras and j not in gold and j not in E]
+            if pool:
+                E.add(rng.choice(pool))
+
+    def b_text(i, cand, Ex):
+        pos, m, d = _pos(a, i, Ex)
+        par = "same" if (m is not None and a["sent_para"][i] == a["sent_para"][m]) else "other"
+        tag = f"[{pos} | {par} paragraph | section: {_sec(a, i)} | cites: {_others(a, i, f)}]"
+        near = sorted(Ex, key=lambda j: (abs(j - i), j))[:4]
+        ctx = " | ".join(S[j] for j in near) if near else "(none)"
+        if train and rng.random() < P_TAGDROP:
+            tag = "[position unknown]"
+        if train and rng.random() < P_CTXDROP:
+            ctx = "(none)"
+        return f"{tag} Candidate: {cand} Citing: {ctx}", d
+
+    for i in range(n):
+        if i in E:
+            continue
+        y = int(i in gold)
+        txt, d = b_text(i, swap(i, S[i], False), E)
+        if train and d > 3 and y == 0 and rng.random() > FAR_KEEP["S2"]:
+            continue
+        out.append((cap, txt, y, key(i)))
+    if train and cfg != "S2f_noA3":
+        for c in cit:
+            t = a["cdel"].get(f"{c}|{f}")
+            if t:
+                txt, _ = b_text(c, t, E - {c})
+                out.append((cap, txt, int(c in gold), key(c) + "|A3"))
+    return out
+
+
+def build(arts, ids, cfg, rng=None):
+    ex = []
+    for pid in ids:
+        a = arts[pid]
+        for f in a["figs"]:
+            ex += examples(a, f, cfg, rng)
+    return ex
+
+
+# ------------------------------------------------------------------ model
+def load_model(path):
+    import torch
+    from transformers import AutoModelForSequenceClassification
+    try:
+        m = AutoModelForSequenceClassification.from_pretrained(path, num_labels=1, dtype=torch.float32)
+    except TypeError:
+        m = AutoModelForSequenceClassification.from_pretrained(path, num_labels=1, torch_dtype=torch.float32)
+    return m.float()
+
+
+def base_of(cfg):
+    return BASE_CFG.get(cfg, BASE)
+
+
+def batches(tok, ex, maxlen, rng=None, bs=BATCH):
+    """Length-grouped batches (shuffled chunks of 50 batches when training) to cut padding."""
+    import torch
+    idx = list(range(len(ex)))
+    if rng is not None:
+        rng.shuffle(idx)
+        chunk = bs * 50
+        idx = [j for k in range(0, len(idx), chunk) for j in sorted(idx[k:k + chunk], key=lambda j: len(ex[j][1]))]
+        groups = [idx[k:k + bs] for k in range(0, len(idx), bs)]
+        rng.shuffle(groups)
+    else:
+        idx.sort(key=lambda j: len(ex[j][0]) + len(ex[j][1]))
+        groups = [idx[k:k + BATCH * 2] for k in range(0, len(idx), BATCH * 2)]
+    for g in groups:
+        e = tok([ex[j][0] for j in g], [ex[j][1] for j in g], truncation="longest_first", max_length=maxlen,
+                padding=True, return_tensors="pt")
+        e["labels"] = torch.tensor([float(ex[j][2]) for j in g])
+        yield g, e
+
+
+def train(arts, ids, cfg, seed, init, log):
+    import torch
+    from transformers import AutoTokenizer, get_linear_schedule_with_warmup
+    dev = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    random.seed(seed), np.random.seed(seed), torch.manual_seed(seed)
+    tok = AutoTokenizer.from_pretrained(base_of(cfg))
+    maxlen = MAXLEN[STAGE[cfg]]
+    bs = MICRO.get(cfg, BATCH)
+    accum = max(1, BATCH // bs)
+    epochs = [build(arts, ids, cfg, random.Random(seed * 1000 + ep)) for ep in range(EPOCHS)]
+    npos = sum(e[2] for e in epochs[0])
+    pw = torch.tensor((len(epochs[0]) - npos) / max(1, npos))
+    steps = sum(math.ceil(len(e) / BATCH) for e in epochs)
+    model = load_model(init).to(dev)
+    opt = torch.optim.AdamW(model.parameters(), lr=LR_CFG.get(cfg, LR_STAGE.get(STAGE[cfg], LR)), weight_decay=WD)
+    sch = get_linear_schedule_with_warmup(opt, int(WARM * steps), steps)
+    scaler = torch.amp.GradScaler("cuda", enabled=dev.type == "cuda")
+    lossf = torch.nn.BCEWithLogitsLoss(pos_weight=pw.to(dev))
+    model.train()
+    losses, skipped, seen = [], 0, 0
+    opt.zero_grad(set_to_none=True)
+    for ep, ex in enumerate(epochs):
+        tot, k = 0.0, 0
+        for mb, (_, e) in enumerate(batches(tok, ex, maxlen, random.Random(seed * 7 + ep), bs)):
+            e = {kk: v.to(dev) for kk, v in e.items()}
+            y = e.pop("labels")
+            with torch.autocast(device_type=dev.type, dtype=torch.float16, enabled=dev.type == "cuda"):
+                lg = model(**e).logits.float().squeeze(-1)
+            loss = lossf(lg, y)
+            seen += 1
+            if not torch.isfinite(loss):            # fp16 overflow in the forward pass: skip this micro-batch
+                skipped += 1
+                if skipped > max(5, 0.02 * seen):
+                    raise RuntimeError(f"non-finite loss in {cfg} seed {seed} ({skipped}/{seen} batches)")
+                continue
+            scaler.scale(loss / accum).backward()
+            tot, k = tot + loss.item(), k + 1
+            if (mb + 1) % accum == 0:
+                scaler.unscale_(opt)
+                torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+                scaler.step(opt)
+                scaler.update()
+                sch.step()
+                opt.zero_grad(set_to_none=True)
+        losses.append(round(tot / max(1, k), 4))
+    log.update({"n_train": [len(e) for e in epochs], "n_pos": npos, "pos_weight": round(float(pw), 3),
+                "steps": steps, "epoch_loss": losses, "skipped_batches": skipped, "base": base_of(cfg)})
+    return model, tok
+
+
+def score(model, tok, arts, ids, cfg):
+    import torch
+    dev = next(model.parameters()).device
+    ex = build(arts, ids, cfg, None)
+    out = {}
+    model.eval()
+    with torch.no_grad():
+        for g, e in batches(tok, ex, MAXLEN[STAGE[cfg]]):
+            e = {k: v.to(dev) for k, v in e.items() if k != "labels"}
+            with torch.autocast(device_type=dev.type, dtype=torch.float16, enabled=dev.type == "cuda"):
+                lg = model(**e).logits.float().squeeze(-1).cpu().numpy()
+            for j, v in zip(g, np.atleast_1d(lg)):
+                out[ex[j][3]] = float(v)
+    model.train()
+    return out
+
+
+def window_auc(arts, scores):
+    """AUC of held-out scores over window sentences (1-3 sentences from a citation of the figure)."""
+    pos, neg = [], []
+    for k, v in scores.items():
+        p, f, i = k.split("|")[:3]
+        a, f, i = arts[p], int(f), int(i)
+        cit = [j for j, c in enumerate(a["cue"]) if f in c]
+        if not cit or i in cit or min(abs(i - j) for j in cit) > 3:
+            continue
+        (pos if i in a["gold"][f] else neg).append(v)
+    if not pos or not neg:
+        return None
+    neg = np.array(neg)
+    return round(float(np.mean([(neg < x).mean() + 0.5 * (neg == x).mean() for x in pos])), 3)
+
+
+def save_model(model, tok, path, cfg):
+    os.makedirs(path, exist_ok=True)
+    model.save_pretrained(path, safe_serialization=True)
+    tok.save_pretrained(path)
+    json.dump({"version": VERSION, "config": cfg, "stage": STAGE[cfg], "max_len": MAXLEN[STAGE[cfg]], "base": base_of(cfg),
+               "input": __doc__.split("Configs")[1].split("Protocol")[0].strip(),
+               "decision": "per-article z-score of the logit >= threshold (threshold from phase8.py)"},
+              open(os.path.join(path, "input_format.json"), "w"), indent=1)
+
+
+# ------------------------------------------------------------------ jobs
+def job_list(arts):
+    train_ids = sorted(p for p, a in arts.items() if a["split"] == "train")
+    folds = sorted({arts[p]["fold"] for p in train_ids})[:NFOLD]
+    jobs = []
+    order = [c for c in ("S1", "S2f", "S2f_noA3", "S1b", "S2b_f", "C0L", "C0", "C0a", "S2s", "S2b_s") if c in CONFIGS]
+    chained = [c for c in order if c in INIT.values() or c in INIT]      # S1 then its stage-2 jobs, fold by fold: few live
+    for group in (chained, [c for c in order if c not in chained]):   # checkpoints on disk at any time
+        for seed in SEEDS:
+            for k in folds:
+                for cfg in group:
+                    dep = [f"{INIT[cfg]}-s{seed}-f{k}"] if cfg in INIT else []
+                    jobs.append({"id": f"{cfg}-s{seed}-f{k}", "cfg": cfg, "seed": seed, "fold": k, "deps": dep,
+                                 "train": [p for p in train_ids if arts[p]["fold"] != k],
+                                 "score": [p for p in train_ids if arts[p]["fold"] == k]})
+    for cfg in order:     # finals: all training papers, seed 1, scored on the sealed test papers
+        dep = [f"{INIT[cfg]}-final"] if cfg in INIT else []
+        jobs.append({"id": f"{cfg}-final", "cfg": cfg, "seed": SEEDS[0], "fold": None, "deps": dep,
+                     "train": train_ids, "score": sorted(p for p, a in arts.items() if a["split"] == "test")})
+    return jobs
+
+
+def done(jid):
+    return os.path.exists(os.path.join(OUT, "jobs", jid + ".json"))
+
+
+def run_job(job, arts, gpu):
+    t0 = time.time()
+    log = {"id": job["id"], "gpu": gpu, "train_papers": job["train"], "scored_papers": job["score"]}
+    init = base_of(job["cfg"])
+    if job["cfg"] in INIT:
+        init = os.path.join(TMP, job["deps"][0]) if job["fold"] is not None else os.path.join(OUT, "models", INIT[job["cfg"]])
+    model, tok = train(arts, job["train"], job["cfg"], job["seed"], init, log)
+    log["scores"] = score(model, tok, arts, job["score"], job["cfg"])
+    if STAGE[job["cfg"]] in ("S1", "S1b") and job["fold"] is not None:
+        log["s1_window_auc"] = window_auc(arts, log["scores"])
+    if job["fold"] is None:
+        save_model(model, tok, os.path.join(OUT, "models", job["cfg"]), job["cfg"])
+        os.makedirs(os.path.join(OUT, "test_SEALED"), exist_ok=True)
+        json.dump(log["scores"], open(os.path.join(OUT, "test_SEALED", job["cfg"] + ".json"), "w"))
+    elif job["cfg"] in INIT.values():                       # keep the stage-1 fold model for its stage-2 jobs
+        model.save_pretrained(os.path.join(TMP, job["id"]), safe_serialization=True)
+    log["minutes"] = round((time.time() - t0) / 60, 1)
+    tmp = os.path.join(OUT, "jobs", job["id"] + ".json.tmp")
+    json.dump(log, open(tmp, "w"))
+    os.replace(tmp, os.path.join(OUT, "jobs", job["id"] + ".json"))
+    # stage-1 fold checkpoint no longer needed once every job that starts from it is done
+    for d in glob.glob(os.path.join(TMP, "*")):
+        users = [j for j in job_list(arts) if j["deps"] == [os.path.basename(d)]]
+        if users and all(done(j["id"]) for j in users):
+            shutil.rmtree(d, ignore_errors=True)
+    return log
+
+
+def worker(gpu):
+    import torch  # noqa: F401
+    arts = load_articles()
+    jobs = job_list(arts)
+    logf = open(os.path.join(OUT, "log.txt"), "a")
+    while True:
+        todo = [j for j in jobs if not done(j["id"])]
+        if not todo:
+            return
+        ready = [j for j in todo if all(done(d) for d in j["deps"])]
+        claimed = None
+        for j in ready:
+            try:
+                os.mkdir(os.path.join(OUT, "claims", j["id"]))
+                claimed = j
+                break
+            except FileExistsError:
+                continue
+        if claimed is None:
+            if all(os.path.isdir(os.path.join(OUT, "claims", j["id"])) for j in todo if all(done(d) for d in j["deps"])) \
+                    and not any(not os.path.isdir(os.path.join(OUT, "claims", j["id"])) for j in todo):
+                return                                     # everything left is being run by the other worker
+            time.sleep(20)
+            continue
+        msg = f"[gpu {gpu}] start {claimed['id']}  train {len(claimed['train'])} papers  {time.strftime('%H:%M:%S')}"
+        print(msg, flush=True), logf.write(msg + "\n"), logf.flush()
+        try:
+            lg = run_job(claimed, arts, gpu)
+        except Exception as ex:                             # release the claim so a re-launch retries it
+            shutil.rmtree(os.path.join(OUT, "claims", claimed["id"]), ignore_errors=True)
+            logf.write(f"[gpu {gpu}] FAILED {claimed['id']}: {ex!r}\n"), logf.flush()
+            raise
+        msg = (f"[gpu {gpu}] done  {claimed['id']}  {lg['minutes']} min  n_train {lg['n_train']}  "
+               f"loss {lg['epoch_loss']}" + (f"  window_auc {lg['s1_window_auc']}" if "s1_window_auc" in lg else "")
+               + f"  ({sum(done(j['id']) for j in jobs)}/{len(jobs)} jobs)")
+        print(msg, flush=True), logf.write(msg + "\n"), logf.flush()
+
+
+def merge():
+    arts = load_articles()
+    jobs = job_list(arts)
+    os.makedirs(os.path.join(OUT, "oof"), exist_ok=True)
+    for cfg in CONFIGS:
+        acc = {}
+        for j in jobs:
+            if j["cfg"] == cfg and j["fold"] is not None and done(j["id"]):
+                for k, v in json.load(open(os.path.join(OUT, "jobs", j["id"] + ".json")))["scores"].items():
+                    acc.setdefault(k, []).append(v)
+        if acc:
+            json.dump({k: float(np.mean(v)) for k, v in acc.items()}, open(os.path.join(OUT, "oof", cfg + ".json"), "w"))
+            print(f"oof/{cfg}.json  {len(acc)} pairs  seeds per pair: {sorted({len(v) for v in acc.values()})}")
+    left = [j["id"] for j in jobs if not done(j["id"])]
+    print("unfinished jobs:", left if left else "none")
+    import zipfile
+    zp = os.path.join(os.path.dirname(OUT.rstrip("/")) or ".", os.path.basename(OUT.rstrip("/")) + "_scores.zip")
+    with zipfile.ZipFile(zp, "w", zipfile.ZIP_DEFLATED) as z:
+        for sub in ("oof", "test_SEALED", "jobs"):
+            for fn in glob.glob(os.path.join(OUT, sub, "*.json")):
+                z.write(fn, os.path.join(sub, os.path.basename(fn)))
+        if os.path.exists(os.path.join(OUT, "log.txt")):
+            z.write(os.path.join(OUT, "log.txt"), "log.txt")
+    print(f"DOWNLOAD {zp} (scores + logs, a few MB). Weights: {OUT}/models/<cfg>/ (about 0.74 GB each) stay in the "
+          f"notebook output; 'New Dataset' from the output keeps them on Kaggle.")
+
+
+def launch():
+    for d in ("jobs", "claims"):
+        os.makedirs(os.path.join(OUT, d), exist_ok=True)
+    os.makedirs(TMP, exist_ok=True)
+    for c in glob.glob(os.path.join(OUT, "claims", "*")):   # stale claims from a previous session
+        if not done(os.path.basename(c)):
+            shutil.rmtree(c, ignore_errors=True)
+    arts = load_articles()
+    jobs = job_list(arts)
+    print(f"{len(jobs)} jobs ({sum(done(j['id']) for j in jobs)} already done); configs {CONFIGS}; seeds {SEEDS}; "
+          f"epochs {EPOCHS}; base {BASE}", flush=True)
+    for cfg in CONFIGS:
+        tr = [p for p, a in arts.items() if a["split"] == "train"]
+        ex = build(arts, tr, cfg, random.Random(0))
+        print(f"  {cfg:9s} training examples on all 15 papers (one epoch): {len(ex)}  positives {sum(e[2] for e in ex)}")
+    try:
+        import torch
+        ngpu = torch.cuda.device_count()
+    except Exception:
+        ngpu = 0
+    procs = []
+    for g in range(max(1, ngpu)):
+        env = dict(os.environ, CUDA_VISIBLE_DEVICES=str(g) if ngpu else "")
+        procs.append(subprocess.Popen([sys.executable, os.path.abspath(__file__), "worker", str(g)], env=env))
+    codes = [p.wait() for p in procs]
+    merge()
+    if any(codes):
+        raise SystemExit(f"a worker failed (exit codes {codes}); see {OUT}/log.txt, then re-run launch to resume")
+
+
+if __name__ == "__main__":
+    cmd = sys.argv[1] if len(sys.argv) > 1 else "launch"
+    if cmd == "worker":
+        worker(int(sys.argv[2]))
+    elif cmd == "merge":
+        merge()
+    else:
+        launch()

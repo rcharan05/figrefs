@@ -1,0 +1,13 @@
+thresholds per held-out article (z): [2.6, 2.6, 2.6, 2.6, 2.6, 2.6, 3.2, 2.6, 2.6, 2.6, 2.6, 2.6, 2.6]
+B0f (rule; citing sentences always included)   P 0.867 R 0.736 F1 0.767
+     cites   correct 191 / selected  203 / gold 191   P 0.941  R 1.000
+     window  correct 143 / selected  190 / gold 210   P 0.753  R 0.681
+     far     correct   0 / selected    0 / gold  89   P 0.000  R 0.000
+MODEL ALONE (whole paper, no rules)            P 0.792 R 0.721 F1 0.721
+     cites   correct 178 / selected  189 / gold 191   P 0.942  R 0.932
+     window  correct 145 / selected  219 / gold 210   P 0.662  R 0.690
+     far     correct   0 / selected    3 / gold  89   P 0.000  R 0.000
+MODEL vs B0f: -0.046 [-0.086, -0.013]  (67 figures, all 13 articles, everything out-of-fold)
+AUC window pairs n=  695 gold=210  0.847
+AUC far    pairs n=10662 gold= 89  0.704
+AUC all pairs n=11560  0.932

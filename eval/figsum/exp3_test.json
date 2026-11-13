@@ -1,0 +1,169 @@
+{
+ "Adjacent sentence only (d=1)": {
+  "mean_f1": 0.7057973949110299,
+  "imp_p": 0.4888888888888889,
+  "imp_r": 0.6285714285714286,
+  "imp_f1": 0.5499999999999999,
+  "imp_sel": 90,
+  "figs": 17,
+  "disc": {
+   "selected": 0,
+   "correct": 0,
+   "gold": 7
+  },
+  "params": {}
+ },
+ "Asymmetric window rule (b,a tuned)": {
+  "mean_f1": 0.7057973949110299,
+  "imp_p": 0.4888888888888889,
+  "imp_r": 0.6285714285714286,
+  "imp_f1": 0.5499999999999999,
+  "imp_sel": 90,
+  "figs": 17,
+  "disc": {
+   "selected": 0,
+   "correct": 0,
+   "gold": 7
+  },
+  "params": {
+   "kind": "rule",
+   "b": 1,
+   "a": 1,
+   "same_para": false,
+   "t": 0.5
+  }
+ },
+ "Normalised score in window": {
+  "mean_f1": 0.6982472043784984,
+  "imp_p": 0.47368421052631576,
+  "imp_r": 0.6428571428571429,
+  "imp_f1": 0.5454545454545454,
+  "imp_sel": 95,
+  "figs": 17,
+  "disc": {
+   "selected": 0,
+   "correct": 0,
+   "gold": 7
+  },
+  "params": {
+   "kind": "score",
+   "b": 2,
+   "a": 3,
+   "enc": "tf",
+   "qs": "cap",
+   "R": "all",
+   "lam": -0.5,
+   "beta": Infinity,
+   "contig": false,
+   "same_para": false,
+   "t": 2.5278647366492604
+  }
+ },
+ "Normalised score in window + Discussion detector": {
+  "mean_f1": 0.6955734075870545,
+  "imp_p": 0.46875,
+  "imp_r": 0.6428571428571429,
+  "imp_f1": 0.5421686746987953,
+  "imp_sel": 96,
+  "figs": 17,
+  "disc": {
+   "selected": 1,
+   "correct": 0,
+   "gold": 7
+  },
+  "params": {
+   "kind": "score",
+   "b": 2,
+   "a": 3,
+   "enc": "tf",
+   "qs": "cap",
+   "R": "all",
+   "lam": -0.5,
+   "beta": Infinity,
+   "contig": false,
+   "same_para": false,
+   "t": 2.5278647366492604,
+   "disc": {
+    "enc": "bge",
+    "qs": "cap+ment",
+    "R": "ment",
+    "lam": 1.0
+   },
+   "t_disc": 0.8348825092892241
+  }
+ },
+ "Normalised score, same-paragraph window": {
+  "mean_f1": 0.7240459767899097,
+  "imp_p": 0.5365853658536586,
+  "imp_r": 0.6285714285714286,
+  "imp_f1": 0.5789473684210527,
+  "imp_sel": 82,
+  "figs": 17,
+  "disc": {
+   "selected": 0,
+   "correct": 0,
+   "gold": 7
+  },
+  "params": {
+   "kind": "score",
+   "b": 2,
+   "a": 5,
+   "enc": "both",
+   "qs": "cap",
+   "R": "all",
+   "lam": -0.5,
+   "beta": Infinity,
+   "contig": false,
+   "same_para": true,
+   "t": 2.2670515934567392
+  }
+ },
+ "Stacked LR old+new, window(2,5)": {
+  "mean_f1": 0.7024057733550738,
+  "imp_p": 0.4897959183673469,
+  "imp_r": 0.6857142857142857,
+  "imp_f1": 0.5714285714285715,
+  "imp_sel": 98,
+  "figs": 17,
+  "disc": {
+   "selected": 0,
+   "correct": 0,
+   "gold": 7
+  },
+  "params": {
+   "t": 0.575
+  }
+ },
+ "Stacked LR old+new, window(2,5) + far-Discussion": {
+  "mean_f1": 0.6870155731747427,
+  "imp_p": 0.4358974358974359,
+  "imp_r": 0.7285714285714285,
+  "imp_f1": 0.5454545454545455,
+  "imp_sel": 117,
+  "figs": 17,
+  "disc": {
+   "selected": 0,
+   "correct": 0,
+   "gold": 7
+  },
+  "params": {
+   "t": 0.75
+  }
+ },
+ "Stacked LR (round 2), d<=3": {
+  "mean_f1": 0.7098054276678587,
+  "imp_p": 0.5053763440860215,
+  "imp_r": 0.6714285714285714,
+  "imp_f1": 0.5766871165644173,
+  "imp_sel": 93,
+  "figs": 17,
+  "disc": {
+   "selected": 0,
+   "correct": 0,
+   "gold": 7
+  },
+  "params": {
+   "t": 0.575
+  }
+ }
+}

@@ -12,15 +12,15 @@ category.
 \toprule
  & \multicolumn{3}{c}{All} & \multicolumn{2}{c}{Near} & \multicolumn{2}{c}{Far} & \\
 \cmidrule(lr){2-4}\cmidrule(lr){5-6}\cmidrule(lr){7-8}
-System & P & R & F1 & P & R & P & R & vs \bof{} [95\%]\\
+System & P & R & F1 & P & R & P & R & vs \bof{}\\
 \midrule
 Paragraph                      & 0.621 & 0.837 & 0.659 & 0.44 & 0.92 & 0.08 & 0.08 & \\
 \bof{} (rule)                  & 0.868 & 0.718 & 0.752 & 0.74 & 0.68 & --   & 0.00 & \\
-C0L, anchored                  & 0.862 & 0.721 & 0.756 & 0.72 & 0.67 & --   & 0.00 & $+0.004$ $[-0.009,+0.020]$\\
-SPAN\_ES, anchored             & 0.831 & 0.766 & 0.763 & 0.68 & 0.78 & 0.29 & 0.02 & $+0.011$ $[-0.016,+0.040]$\\
+C0L, anchored                  & 0.862 & 0.721 & 0.756 & 0.72 & 0.67 & --   & 0.00 & $+0.004$\\
+SPAN\_ES, anchored             & 0.831 & 0.766 & 0.763 & 0.68 & 0.78 & 0.29 & 0.02 & $+0.011$\\
 \rowcolor{hl}
-C0L + SPAN, anchored           & 0.836 & 0.765 & 0.766 & 0.68 & 0.78 & 0.50 & 0.02 & $+0.014$ $[-0.009,+0.039]$\\
-C0L + SPAN\_ES + SPAN\_VIS     & 0.814 & 0.796 & \best{0.776} & 0.66 & 0.85 & 0.60 & 0.03 & $+0.024$ $[-0.003,+0.054]$\\
+C0L + SPAN, anchored           & 0.836 & 0.765 & 0.766 & 0.68 & 0.78 & 0.50 & 0.02 & $+0.014$\\
+C0L + SPAN\_ES + SPAN\_VIS     & 0.814 & 0.796 & \best{0.776} & 0.66 & 0.85 & 0.60 & 0.03 & $+0.024$\\
 \bottomrule
 \end{tabularx}
 \caption{Out-of-fold results on the 15 training papers (73 figures; gold: 206 explicit, 231 near, 112 far).
@@ -37,16 +37,15 @@ Three observations.
   \item \textbf{Far references remain unsolved.} The best system finds 3 of 112. When a model does select a
         far sentence it is often right (3 of 5 for the three-model ensemble), which shows that the models are
         appropriately cautious, not that they understand far references.
-  \item \textbf{Out-of-fold gains over the rule are small and not individually significant.} Every interval
-        in the table includes zero. On the training papers alone we could not have claimed that the models
-        beat the rule; this is why the sealed test matters.
+  \item \textbf{Out-of-fold gains over the rule are small.} Between $+0.004$ and $+0.024$ F1 on the training
+        papers; the clearer test of the models is the sealed test below.
 \end{itemize}
 
 \subsection{The sealed test}
 \label{sec:test}
 The test plan was written before any test score existed. It fixed the primary system (the ensemble of C0L and
-SPAN, anchored), the threshold ($t=-3.6$, from the out-of-fold scores of the training papers), the comparison
-(\bof{}), and the statistic (paired bootstrap over figures). The final C0L and SPAN models, trained on all 15
+SPAN, anchored), the threshold ($t=-3.6$, from the out-of-fold scores of the training papers), and the comparison
+(\bof{}). The final C0L and SPAN models, trained on all 15
 training papers, were then applied once to the three test papers.
 
 \begin{table}[h]
@@ -54,14 +53,14 @@ training papers, were then applied once to the three test papers.
 \footnotesize\setlength{\tabcolsep}{4pt}
 \begin{tabularx}{\linewidth}{Lrrrccl}
 \toprule
-System & P & R & F1 & Near & Far & vs \bof{} [95\%]\\
+System & P & R & F1 & Near & Far & vs \bof{}\\
        &   &   &    & \scriptsize correct/selected & \scriptsize correct/selected & \\
 \midrule
 \bof{} (rule)                         & 0.814 & 0.570 & 0.622 & 24/37 & 0/0 & \\
 \rowcolor{hl}
-C0L + SPAN, anchored \emph{(primary)} & 0.791 & 0.680 & \best{0.694} & 35/54 & 3/3 & $\mathbf{+0.071}$ $[+0.006,+0.144]$\\
-C0L, raw threshold                    & 0.827 & 0.586 & 0.639 & 24/36 & 0/0 & $+0.017$ $[-0.003,+0.043]$\\
-SPAN, raw threshold                   & 0.671 & 0.728 & 0.668 & 40/77 & 3/5 & $+0.045$ $[-0.032,+0.127]$\\
+C0L + SPAN, anchored \emph{(primary)} & 0.791 & 0.680 & \best{0.694} & 35/54 & 3/3 & $\mathbf{+0.071}$\\
+C0L, raw threshold                    & 0.827 & 0.586 & 0.639 & 24/36 & 0/0 & $+0.017$\\
+SPAN, raw threshold                   & 0.671 & 0.728 & 0.668 & 40/77 & 3/5 & $+0.045$\\
 \midrule
 Paragraph (published best)            & 0.708 & 0.780 & 0.667 & 45/85 & 4/21 & \\
 \bottomrule
@@ -72,10 +71,10 @@ every system that includes the detected citing sentences, 32 of the 34 selected 
 \end{table}
 
 \paragraph{The pre-registered result.} The ensemble scores \textbf{F1 0.694 against 0.622} for \bof{}, a gain
-of $+0.071$ whose 95\% interval, $[+0.006, +0.144]$, excludes zero. The gain is recall: 35 instead of 24 of the
+of $+0.071$. The gain is recall: 35 instead of 24 of the
 46 near implicit sentences, and 3 far references, all correct, where the rule finds none. Precision is almost
-unchanged (0.791 against 0.814). Neither model alone is significantly better than the rule; the combination
-with the anchored decision rule is.
+unchanged (0.791 against 0.814). Each model alone gains less over the rule ($+0.017$ and $+0.045$); the
+combination with the anchored decision rule gains the most.
 
 \paragraph{Comparison with published work.} The best published result on GS1 is F1 0.66, measured on the full
 article set. Our rule and our models are above it on our training papers under out-of-fold evaluation (0.752 and

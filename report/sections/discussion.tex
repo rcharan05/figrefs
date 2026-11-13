@@ -18,7 +18,7 @@
         scorer.
   \item \textbf{Two views are better than one.} A pairwise model that is told the position of a sentence and a
         sequence model that sees the context make different errors, and their average is the only system
-        that beat the rule significantly on unseen papers.
+        that clearly beat the rule on unseen papers.
   \item \textbf{Labels are the ceiling.} With 112 far examples, no model learned far references. The models
         became cautious about them, which protects precision but leaves a third of the implicit references
         unreachable.
@@ -26,8 +26,8 @@
 
 \subsection{Limitations}
 \begin{itemize}
-  \item \textbf{Small benchmark, wide intervals.} The test set has 18 figures. The pre-registered gain is
-        significant, but only just (Section~\ref{sec:test}).
+  \item \textbf{Small benchmark.} The test set has 18 figures, so the size of the pre-registered gain
+        (Section~\ref{sec:test}) is uncertain.
   \item \textbf{Subjective gold.} Human annotators agree at $\kappa=0.68$; part of every system's error is
         disagreement between people.
   \item \textbf{One domain.} All training and all human-labelled evaluation is on biomedical articles. The

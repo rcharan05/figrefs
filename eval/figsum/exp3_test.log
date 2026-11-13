@@ -1,0 +1,25 @@
+== TEST (second look) 4 articles; fitted on all dev
+Adjacent sentence only (d=1)               meanF1 0.706 | implicit P 0.489 R 0.629 F1 0.550 (sel 90) | far-Disc 0/0 sel, gold 7
+Asymmetric window rule (b,a tuned)         meanF1 0.706 | implicit P 0.489 R 0.629 F1 0.550 (sel 90) | far-Disc 0/0 sel, gold 7
+Normalised score in window                 meanF1 0.698 | implicit P 0.474 R 0.643 F1 0.545 (sel 95) | far-Disc 0/0 sel, gold 7
+Normalised score in window + Discussion detector meanF1 0.696 | implicit P 0.469 R 0.643 F1 0.542 (sel 96) | far-Disc 0/1 sel, gold 7
+Normalised score, same-paragraph window    meanF1 0.724 | implicit P 0.537 R 0.629 F1 0.579 (sel 82) | far-Disc 0/0 sel, gold 7
+Stacked LR old+new, window(2,5)            meanF1 0.702 | implicit P 0.490 R 0.686 F1 0.571 (sel 98) | far-Disc 0/0 sel, gold 7
+Stacked LR old+new, window(2,5) + far-Discussion meanF1 0.687 | implicit P 0.436 R 0.729 F1 0.545 (sel 117) | far-Disc 0/0 sel, gold 7
+Stacked LR (round 2), d<=3                 meanF1 0.710 | implicit P 0.505 R 0.671 F1 0.577 (sel 93) | far-Disc 0/0 sel, gold 7
+   vs adjacent: Adjacent sentence only (d=1)                         +0.000  [+0.000, +0.000]
+   vs adjacent: Asymmetric window rule (b,a tuned)                   +0.000  [+0.000, +0.000]
+   vs adjacent: Normalised score in window                           -0.008  [-0.019, +0.003]
+   vs adjacent: Normalised score in window + Discussion detector     -0.010  [-0.022, +0.001]
+   vs adjacent: Normalised score, same-paragraph window              +0.018  [-0.005, +0.042]
+   vs adjacent: Stacked LR old+new, window(2,5)                      -0.003  [-0.074, +0.062]
+   vs adjacent: Stacked LR old+new, window(2,5) + far-Discussion     -0.019  [-0.073, +0.035]
+   vs adjacent: Stacked LR (round 2), d<=3                           +0.004  [-0.047, +0.056]
+   per article: Adjacent sentence only (d=1) {'1065313': 0.675, '1087843': 0.779, '111020': 0.489, '2891020': 0.816}
+   per article: Asymmetric window rule (b,a tuned) {'1065313': 0.675, '1087843': 0.779, '111020': 0.489, '2891020': 0.816}
+   per article: Normalised score in window {'1065313': 0.667, '1087843': 0.762, '111020': 0.489, '2891020': 0.816}
+   per article: Normalised score in window + Discussion  {'1065313': 0.667, '1087843': 0.762, '111020': 0.474, '2891020': 0.816}
+   per article: Normalised score, same-paragraph window {'1065313': 0.672, '1087843': 0.803, '111020': 0.547, '2891020': 0.823}
+   per article: Stacked LR old+new, window(2,5) {'1065313': 0.689, '1087843': 0.843, '111020': 0.56, '2891020': 0.651}
+   per article: Stacked LR old+new, window(2,5) + far-Di {'1065313': 0.664, '1087843': 0.796, '111020': 0.561, '2891020': 0.674}
+   per article: Stacked LR (round 2), d<=3 {'1065313': 0.677, '1087843': 0.823, '111020': 0.594, '2891020': 0.696}

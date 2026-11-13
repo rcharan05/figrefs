@@ -1,0 +1,37 @@
+== DEV round 3, nested LOAO over 9 articles
+Adjacent sentence only (d=1)               meanF1 0.726 | implicit P 0.571 R 0.511 F1 0.539 (sel 205) | far-Disc 0/0 sel, gold 53
+Asymmetric window rule (b,a tuned)         meanF1 0.726 | implicit P 0.571 R 0.511 F1 0.539 (sel 205) | far-Disc 0/0 sel, gold 53
+Normalised score in window                 meanF1 0.697 | implicit P 0.538 R 0.489 F1 0.513 (sel 208) | far-Disc 0/0 sel, gold 53
+Normalised score in window + Discussion detector meanF1 0.687 | implicit P 0.519 R 0.489 F1 0.503 (sel 216) | far-Disc 0/8 sel, gold 53
+Normalised score, contiguity               meanF1 0.706 | implicit P 0.562 R 0.493 F1 0.526 (sel 201) | far-Disc 0/0 sel, gold 53
+Normalised score, contiguity + Discussion detector meanF1 0.696 | implicit P 0.541 R 0.493 F1 0.516 (sel 209) | far-Disc 0/8 sel, gold 53
+Normalised score, same-paragraph window    meanF1 0.721 | implicit P 0.571 R 0.489 F1 0.527 (sel 196) | far-Disc 0/0 sel, gold 53
+Top-k per figure in window                 meanF1 0.653 | implicit P 0.452 R 0.328 F1 0.380 (sel 166) | far-Disc 0/0 sel, gold 53
+LR old+new feats, window(2,5)              meanF1 0.710 | implicit P 0.589 R 0.450 F1 0.510 (sel 175) | far-Disc 0/0 sel, gold 53
+LR old+new feats, window(2,5) + far-Discussion meanF1 0.716 | implicit P 0.602 R 0.437 F1 0.506 (sel 166) | far-Disc 1/3 sel, gold 53
+Stacked LR old+new, window(2,5)            meanF1 0.742 | implicit P 0.596 R 0.489 F1 0.537 (sel 188) | far-Disc 0/0 sel, gold 53
+Stacked LR old+new, window(2,5) + far-Discussion meanF1 0.742 | implicit P 0.640 R 0.450 F1 0.528 (sel 161) | far-Disc 0/1 sel, gold 53
+Stacked LR (round 2), d<=3                 meanF1 0.740 | implicit P 0.605 R 0.502 F1 0.549 (sel 190) | far-Disc 0/0 sel, gold 53
+
+-- paired bootstrap over figures vs adjacent rule [95% interval]
+   Adjacent sentence only (d=1)                         +0.000  [+0.000, +0.000]
+   Asymmetric window rule (b,a tuned)                   +0.000  [+0.000, +0.000]
+   Normalised score in window                           -0.029  [-0.051, -0.010]
+   Normalised score in window + Discussion detector     -0.039  [-0.062, -0.019]
+   Normalised score, contiguity                         -0.020  [-0.041, -0.002]
+   Normalised score, contiguity + Discussion detector   -0.030  [-0.053, -0.011]
+   Normalised score, same-paragraph window              -0.005  [-0.031, +0.022]
+   Top-k per figure in window                           -0.073  [-0.099, -0.048]
+   LR old+new feats, window(2,5)                        -0.016  [-0.049, +0.016]
+   LR old+new feats, window(2,5) + far-Discussion       -0.010  [-0.047, +0.026]
+   Stacked LR old+new, window(2,5)                      +0.016  [-0.021, +0.054]
+   Stacked LR old+new, window(2,5) + far-Discussion     +0.016  [-0.022, +0.053]
+   Stacked LR (round 2), d<=3                           +0.014  [-0.020, +0.047]
+
+-- parameters chosen per fold (first 3 folds) for the normalised-score methods
+   Normalised score in window {'kind': 'score', 'b': 2, 'a': 5, 'enc': 'tf', 'qs': 'cap', 'R': 'all', 'lam': -0.5, 'beta': inf, 'contig': False, 'same_para': False, 't': 2.543645145578828}
+   Normalised score in window {'kind': 'score', 'b': 1, 'a': 1, 'enc': 'both', 'qs': 'cap+ment', 'R': 'local', 'lam': 0.0, 'beta': 0.0, 'contig': False, 'same_para': False, 't': -0.6394885812325065}
+   Normalised score in window {'kind': 'score', 'b': 2, 'a': 5, 'enc': 'tf', 'qs': 'cap', 'R': 'all', 'lam': -0.5, 'beta': inf, 'contig': False, 'same_para': False, 't': 2.49280425253303}
+   Normalised score in window + D {'kind': 'score', 'b': 2, 'a': 5, 'enc': 'tf', 'qs': 'cap', 'R': 'all', 'lam': -0.5, 'beta': inf, 'contig': False, 'same_para': False, 't': 2.543645145578828, 'disc': {'enc': 'bge', 'qs': 'cap+ment', 'R': 'ment', 'lam': 1.0}, 't_disc': 0.9824675951932812}
+   Normalised score in window + D {'kind': 'score', 'b': 1, 'a': 1, 'enc': 'both', 'qs': 'cap+ment', 'R': 'local', 'lam': 0.0, 'beta': 0.0, 'contig': False, 'same_para': False, 't': -0.6394885812325065, 'disc': {'enc': 'tf', 'qs': 'ment', 'R': 'all', 'lam': 0.0}, 't_disc': 5.670289403653528}
+   Normalised score in window + D {'kind': 'score', 'b': 2, 'a': 5, 'enc': 'tf', 'qs': 'cap', 'R': 'all', 'lam': -0.5, 'beta': inf, 'contig': False, 'same_para': False, 't': 2.49280425253303, 'disc': {'enc': 'both', 'qs': 'cap', 'R': 'ment', 'lam': 1.0}, 't_disc': 0.855114138670801}

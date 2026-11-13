@@ -1,0 +1,33 @@
+{
+ "tfidf": {
+  "n": 33,
+  "top1": 0.667,
+  "mrr": 0.766
+ },
+ "bge+concat": {
+  "n": 33,
+  "top1": 0.455,
+  "mrr": 0.635
+ },
+ "bge+caption": {
+  "n": 33,
+  "top1": 0.636,
+  "mrr": 0.731
+ },
+ "bge+maxpiece": {
+  "n": 33,
+  "top1": 0.455,
+  "mrr": 0.588
+ },
+ "bge-reranker+caption": {
+  "n": 33,
+  "top1": 0.424,
+  "mrr": 0.612
+ },
+ "bge-reranker+maxpiece": {
+  "n": 33,
+  "top1": 0.424,
+  "mrr": 0.59
+ },
+ "_papers": 3
+}
