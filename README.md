@@ -5,7 +5,7 @@ For every figure in a research paper, `figrefs` returns all the text that discus
 - **explicit references**: sentences that name the figure ("as shown in Fig. 3B");
 - **implicit references**: sentences that discuss what the figure shows without naming it.
 
-Undergraduate project by Charan (230819), supervised by Prof. Soumya Dutta, IIT Kanpur, Fall 2026. The full write-up is in [`report/main.pdf`](report/main.pdf).
+Undergraduate project by R. Charan (230819), supervised by Prof. Soumya Dutta, IIT Kanpur, Odd Semester 2026. The full write-up is in [`report/main.pdf`](report/main.pdf).
 
 ## Results in brief
 
