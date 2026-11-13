@@ -26,7 +26,7 @@ Trained models: https://huggingface.co/iLuvU2/figrefs-models
 Python 3.9 or newer.
 
 ```bash
-git clone <this repository>
+git clone https://github.com/rcharan05/figrefs
 cd figrefs
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt          # the tool (CPU only)

@@ -90,7 +90,9 @@ a new best; best weights restored.
 
 \paragraph{Decision rule of the registered ensemble.} Mean of the C0L and SPAN logits; minus the mean over
 the figure's citing sentences (or the median over all its sentences if it is never cited); select if the
-result is at least $-3.6$; always include the citing sentences.
+result is at least $-3.6$; always include the citing sentences. The threshold $-3.6$ is the one that maximises F1 on all 15 training papers
+(in-sample F1 0.776); the out-of-fold figure of 0.766 reported in Section~\ref{sec:results} instead chooses each fold's
+threshold on the other four folds.
 
 \paragraph{Figure text (SPAN\_VIS).} Qwen2-VL-2B-Instruct, greedy decoding with a repetition penalty of 1.15.
 Header: caption, then ``Figure text:'' with the OCR output, then ``Figure shows:'' with the description, up to
